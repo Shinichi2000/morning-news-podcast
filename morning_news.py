@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-自動モーニングニュース Podcast 生成スクリプト v2
-修正: リトライ機能追加、モデルフォールバック、トークン量削減
+自動モーニングニュース Podcast 生成スクリプト v3
+修正: google-genai SDK使用、正しいモデル名、リトライ強化
 """
 
 import os
-import json
 import asyncio
 import datetime
 import time
 import feedparser
 import yfinance as yf
 import edge_tts
+from google import genai
 
 # ============================================================
 # 設定
@@ -36,25 +36,22 @@ RSS_FEEDS = {
     "WSJ World": "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",
 }
 
-def get_stock_news_feeds():
-    feeds = {}
-    keywords = {
-        "LMT": "Lockheed Martin",
-        "NVDA": "NVIDIA",
-        "1911.T": "住友林業",
-        "4063.T": "信越化学",
-    }
-    for ticker, keyword in keywords.items():
-        encoded = keyword.replace(" ", "+")
-        url = "https://news.google.com/rss/search?q=" + encoded + "&hl=ja&gl=JP&ceid=JP:ja"
-        feeds["NEWS_" + keyword] = url
-    return feeds
+STOCK_KEYWORDS = {
+    "LMT": "Lockheed Martin",
+    "NVDA": "NVIDIA",
+    "1911.T": "住友林業",
+    "4063.T": "信越化学",
+}
 
 TTS_VOICE = "ja-JP-NanamiNeural"
 OUTPUT_DIR = "output"
 TODAY = datetime.datetime.now().strftime("%Y-%m-%d")
 OUTPUT_MP3 = os.path.join(OUTPUT_DIR, "morning_news_" + TODAY + ".mp3")
 
+
+# ============================================================
+# 1. ニュース収集
+# ============================================================
 
 def fetch_rss_news():
     print("NEWS: collecting...")
@@ -70,18 +67,24 @@ def fetch_rss_news():
         except Exception as e:
             print("  FAIL " + name + ": " + str(e))
 
-    for name, url in get_stock_news_feeds().items():
+    for ticker, keyword in STOCK_KEYWORDS.items():
         try:
+            encoded = keyword.replace(" ", "+")
+            url = "https://news.google.com/rss/search?q=" + encoded + "&hl=ja&gl=JP&ceid=JP:ja"
             feed = feedparser.parse(url)
             entries = [e.get("title", "") for e in feed.entries[:2]]
             if entries:
-                all_news[name] = entries
-                print("  OK " + name + ": " + str(len(entries)))
+                all_news["NEWS_" + keyword] = entries
+                print("  OK NEWS_" + keyword + ": " + str(len(entries)))
         except Exception as e:
-            print("  FAIL " + name + ": " + str(e))
+            print("  FAIL NEWS_" + keyword + ": " + str(e))
 
     return all_news
 
+
+# ============================================================
+# 2. 株価取得
+# ============================================================
 
 def fetch_stock_prices():
     print("\nSTOCK: collecting...")
@@ -112,31 +115,46 @@ def fetch_stock_prices():
     return stock_data
 
 
-def call_gemini(prompt):
-    """Gemini API with retry and model fallback"""
-    import google.generativeai as genai
-    genai.configure(api_key=GEMINI_API_KEY)
+# ============================================================
+# 3. 原稿生成（新 google-genai SDK + リトライ）
+# ============================================================
 
-    models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]
+def call_gemini(prompt):
+    """新SDKでGemini APIを呼び出し（リトライ付き）"""
+    client = genai.Client(api_key=GEMINI_API_KEY)
+
+    # 新SDKで使えるモデル（優先順）
+    models = [
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+    ]
 
     for model_name in models:
         for attempt in range(3):
             try:
-                print("  TRY " + str(attempt+1) + "/3 (" + model_name + ")")
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(prompt)
+                print("  TRY " + str(attempt + 1) + "/3 (" + model_name + ")")
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                )
                 text = response.text
                 print("  OK: " + str(len(text)) + " chars with " + model_name)
                 return text
             except Exception as e:
                 err = str(e)
                 if "429" in err or "quota" in err.lower() or "resource" in err.lower():
-                    wait = 20 * (attempt + 1)
+                    wait = 30 * (attempt + 1)
                     print("  RATE LIMITED -> waiting " + str(wait) + "s...")
                     time.sleep(wait)
-                else:
-                    print("  ERROR " + model_name + ": " + str(e))
+                elif "404" in err or "not found" in err.lower():
+                    print("  MODEL NOT FOUND: " + model_name + " -> skip")
                     break
+                else:
+                    print("  ERROR: " + str(e))
+                    if attempt == 2:
+                        break
+                    time.sleep(10)
         print("  NEXT MODEL...")
 
     return None
@@ -154,8 +172,9 @@ def generate_script(news_data, stock_data):
     stock_text = "STOCKS:\n"
     for s in stock_data:
         d = "UP" if s["change_pct"] >= 0 else "DOWN"
-        c = "yen" if s["currency"] == "JPY" else "usd"
-        stock_text += "- " + s["name"] + ": " + str(s["price"]) + c + " (" + d + str(abs(s["change_pct"])) + "%)\n"
+        c = "円" if s["currency"] == "JPY" else "ドル"
+        stock_text += "- " + s["name"] + ": " + str(s["price"]) + c
+        stock_text += " (" + d + str(abs(s["change_pct"])) + "%)\n"
 
     today_jp = datetime.datetime.now().strftime("%Y年%m月%d日")
     prompt = "プロのニュースキャスターとして、朝の通勤用ニュース原稿を日本語で作成。\n"
@@ -166,6 +185,10 @@ def generate_script(news_data, stock_data):
 
     return call_gemini(prompt)
 
+
+# ============================================================
+# 4. 音声合成（Edge TTS）
+# ============================================================
 
 async def generate_audio(script, output_path):
     print("\nAUDIO: generating...")
@@ -179,6 +202,10 @@ async def generate_audio(script, output_path):
         print("  FAIL: " + str(e))
         return False
 
+
+# ============================================================
+# 5. HTMLプレーヤー
+# ============================================================
 
 def update_player_html():
     lines = []
@@ -211,6 +238,10 @@ def update_player_html():
         f.write("\n".join(lines))
     print("  OK: index.html updated")
 
+
+# ============================================================
+# メイン
+# ============================================================
 
 def main():
     print("=" * 50)
