@@ -1,0 +1,4 @@
+feedparser
+yfinance
+google-generativeai
+edge-tts
