@@ -1,4 +1,4 @@
 feedparser
 yfinance
-google-generativeai
+google-genai
 edge-tts
