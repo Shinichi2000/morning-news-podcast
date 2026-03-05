@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自動モーニングニュース Podcast 生成スクリプト v3
-修正: google-genai SDK使用、正しいモデル名、リトライ強化
+修正: google-genai SDK使用、gemini-2.5系モデル、リトライ強化
 """
 
 import os
