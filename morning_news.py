@@ -124,10 +124,11 @@ def call_gemini(prompt):
     client = genai.Client(api_key=GEMINI_API_KEY)
 
     # 新SDKで使えるモデル（優先順）
+    # NOTE: gemini-1.5系は廃止済(404)、gemini-2.0系は2026年6月廃止予定
     models = [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
         "gemini-2.0-flash",
-        "gemini-2.0-flash-lite",
-        "gemini-1.5-flash",
     ]
 
     for model_name in models:
@@ -150,6 +151,9 @@ def call_gemini(prompt):
                 elif "404" in err or "not found" in err.lower():
                     print("  MODEL NOT FOUND: " + model_name + " -> skip")
                     break
+                elif "403" in err or "permission" in err.lower() or "forbidden" in err.lower():
+                    print("  AUTH ERROR (403): API key may be invalid or expired")
+                    return None
                 else:
                     print("  ERROR: " + str(e))
                     if attempt == 2:
