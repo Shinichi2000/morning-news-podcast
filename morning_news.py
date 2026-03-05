@@ -125,9 +125,9 @@ def call_gemini(prompt):
 
     # 新SDKで使えるモデル（優先順）
     models = [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
         "gemini-2.0-flash",
-        "gemini-2.0-flash-lite",
-        "gemini-1.5-flash",
     ]
 
     for model_name in models:
