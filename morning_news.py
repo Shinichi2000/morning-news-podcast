@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 自動モーニングニュース Podcast 生成スクリプト v3
-修正: google-genai SDK使用、正しいモデル名、リトライ強化
+修正: google-genai SDK使用、gemini-2.5系モデル、リトライ強化
 """
 
 import os
@@ -124,10 +124,11 @@ def call_gemini(prompt):
     client = genai.Client(api_key=GEMINI_API_KEY)
 
     # 新SDKで使えるモデル（優先順）
+    # gemini-2.0系は2026年6月廃止予定のため2.5系を優先
     models = [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
         "gemini-2.0-flash",
-        "gemini-2.0-flash-lite",
-        "gemini-1.5-flash",
     ]
 
     for model_name in models:
