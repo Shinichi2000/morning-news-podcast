@@ -124,10 +124,11 @@ def call_gemini(prompt):
     client = genai.Client(api_key=GEMINI_API_KEY)
 
     # 新SDKで使えるモデル（優先順）
+    # gemini-1.5系は廃止済み（404）のため除外
     models = [
         "gemini-2.0-flash",
         "gemini-2.0-flash-lite",
-        "gemini-1.5-flash",
+        "gemini-2.5-flash",
     ]
 
     for model_name in models:
