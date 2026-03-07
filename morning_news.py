@@ -44,7 +44,7 @@ STOCK_KEYWORDS = {
 }
 
 TTS_VOICE = "ja-JP-NanamiNeural"
-OUTPUT_DIR = "output"
+OUTPUT_DIR = "docs"
 TODAY = datetime.datetime.now().strftime("%Y-%m-%d")
 OUTPUT_MP3 = os.path.join(OUTPUT_DIR, "morning_news_" + TODAY + ".mp3")
 
