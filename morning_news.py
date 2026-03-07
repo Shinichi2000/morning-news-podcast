@@ -36,8 +36,9 @@ RSS_FEEDS_JAPAN = {
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODELS = [
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-pro-latest",
 ]
 
 STOCK_TICKERS = {
@@ -130,7 +131,7 @@ def generate_script(world_news, japan_news, stock_data, weather):
 以下のデータをもとに、日本語のラジオ放送原稿を書いてください。
 
 「厳守ルール」
-- 冠頭は必ず『おはようございます。{{TODAY_JP}}、モーニングニュースです。』で始める
+- 冠頭は必ず『おはようございます。{TODAY_JP}、モーニングニュースです。』で始める
 - キャスター名・担当者名は絶対に読み上げない（冠頭・末尾含め一切禁止）
 - 交通情報のコーナーは設けない
 - マークダウン記号（**、##、--- 等）は一切使わない
