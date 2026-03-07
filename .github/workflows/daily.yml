@@ -5,7 +5,7 @@ on:
   schedule:
     # 毎朝6時（日本時間）= UTC 21:00（前日）
     - cron: '0 21 * * *'
-  workflow_dispatch:  # 手動実行も可能
+  workflow_dispatch: # 手動実行も可能
 
 permissions:
   contents: write
@@ -13,7 +13,7 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v4
@@ -40,6 +40,6 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add output/
-          git commit -m "🎙️ $(date +%Y-%m-%d) モーニングニュース更新" || echo "No changes"
+          git add -f output/
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "🎙️ $(date +%Y-%m-%d) モーニングニュース更新"
           git push
