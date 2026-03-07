@@ -3,6 +3,7 @@ import datetime
 import asyncio
 import json
 import re
+import time
 import requests
 
 import edge_tts
@@ -36,9 +37,9 @@ RSS_FEEDS_JAPAN = {
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODELS = [
     "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-pro-latest",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro",
 ]
 
 STOCK_TICKERS = {
@@ -185,6 +186,11 @@ def generate_script(world_news, japan_news, stock_data, weather):
                 if text:
                     print(f"  OK: {model} で原稿生成完了")
                     return text
+        except urllib.error.HTTPError as e:
+            print(f"  NG: {model} → HTTP Error {e.code}: {e.reason}")
+            if e.code == 429:
+                print("  429 Too Many Requests - 30秒待機...")
+                time.sleep(30)
         except Exception as e:
             print(f"  NG: {model} → {e}")
 
