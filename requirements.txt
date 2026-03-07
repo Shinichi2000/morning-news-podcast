@@ -1,4 +1,4 @@
 feedparser
 yfinance
-google-genai
 edge-tts
+requests
