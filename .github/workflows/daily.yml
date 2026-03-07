@@ -33,13 +33,13 @@ jobs:
 
       - name: 古いファイルを削除（7日以上前）
         run: |
-          find output/ -name "*.mp3" -mtime +7 -delete 2>/dev/null || true
-          find output/ -name "*.txt" -mtime +7 -delete 2>/dev/null || true
+          find docs/ -name "*.mp3" -mtime +7 -delete 2>/dev/null || true
+          find docs/ -name "*.txt" -mtime +7 -delete 2>/dev/null || true
 
       - name: 生成ファイルをコミット＆プッシュ
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add -f output/
+          git add -f docs/
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "🎙️ $(date +%Y-%m-%d) モーニングニュース更新"
           git push
