@@ -6,7 +6,7 @@ import re
 import time
 import requests
 
-import google.generativeai as genai
+from google import genai
 
 import edge_tts
 import feedparser
@@ -161,15 +161,15 @@ def generate_script(world_news, japan_news, stock_data, weather):
 {weather_text}
 """
 
-    genai.configure(api_key=GEMINI_API_KEY)
+    client = genai.Client(api_key=GEMINI_API_KEY)
     
     for model in GEMINI_MODELS:
         for attempt in range(3):
             try:
-                gmodel = genai.GenerativeModel(model)
-                response = gmodel.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=genai.types.GenerateContentConfig(
                         temperature=0.7,
                         max_output_tokens=2048,
                     ),
