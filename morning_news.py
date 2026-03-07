@@ -6,6 +6,8 @@ import re
 import time
 import requests
 
+import google.generativeai as genai
+
 import edge_tts
 import feedparser
 import yfinance as yf
@@ -159,45 +161,32 @@ def generate_script(world_news, japan_news, stock_data, weather):
 {weather_text}
 """
 
-    import urllib.request
-    headers = {"Content-Type": "application/json"}
-
+    genai.configure(api_key=GEMINI_API_KEY)
+    
     for model in GEMINI_MODELS:
-        # gemini-2.0 uses v1beta, gemini-1.5 uses v1
-        if "2.0" in model:
-            api_version = "v1beta"
-        else:
-            api_version = "v1"
-        api_url = (
-            f"https://generativelanguage.googleapis.com/{api_version}/models/"
-            f"{model}:generateContent?key={GEMINI_API_KEY}"
-        )
-        body = json.dumps({
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048},
-        }).encode("utf-8")
-
-        try:
-            req = urllib.request.Request(api_url, data=body, headers=headers, method="POST")
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                text = (
-                    result.get("candidates", [{}])[0]
-                    .get("content", {})
-                    .get("parts", [{}])[0]
-                    .get("text", "")
-                    .strip()
+        for attempt in range(3):
+            try:
+                gmodel = genai.GenerativeModel(model)
+                response = gmodel.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.7,
+                        max_output_tokens=2048,
+                    ),
                 )
+                text = response.text.strip()
                 if text:
                     print(f"  OK: {model} で原稿生成完了")
                     return text
-        except urllib.error.HTTPError as e:
-            print(f"  NG: {model} → HTTP Error {e.code}: {e.reason}")
-            if e.code == 429:
-                print("  429 Too Many Requests - 30秒待機...")
-                time.sleep(30)
-        except Exception as e:
-            print(f"  NG: {model} → {e}")
+            except Exception as e:
+                err_str = str(e)
+                print(f"  NG: {model} attempt {attempt+1} → {err_str[:100]}")
+                if "429" in err_str or "quota" in err_str.lower() or "Resource" in err_str:
+                    wait_sec = 30 * (attempt + 1)
+                    print(f"  レート制限 - {wait_sec}秒待機...")
+                    time.sleep(wait_sec)
+                else:
+                    break
 
     return None
 
