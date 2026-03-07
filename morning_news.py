@@ -163,8 +163,13 @@ def generate_script(world_news, japan_news, stock_data, weather):
     headers = {"Content-Type": "application/json"}
 
     for model in GEMINI_MODELS:
+        # gemini-2.0 uses v1beta, gemini-1.5 uses v1
+        if "2.0" in model:
+            api_version = "v1beta"
+        else:
+            api_version = "v1"
         api_url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"https://generativelanguage.googleapis.com/{api_version}/models/"
             f"{model}:generateContent?key={GEMINI_API_KEY}"
         )
         body = json.dumps({
