@@ -1,24 +1,61 @@
 <!DOCTYPE html>
-<html lang="ja"><head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Morning News</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
-background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
-color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.c{text-align:center;padding:2rem;max-width:480px;width:100%}
-h1{font-size:1.5rem;margin-bottom:.5rem}
-.d{color:#aaa;margin-bottom:2rem;font-size:.9rem}
-audio{width:100%;margin:1.5rem 0;border-radius:30px}
-.i{color:#888;font-size:.8rem;margin-top:1rem}
-</style></head><body>
-<div class="c">
-<h1>Morning News</h1>
-<p class="d">2026-03-07</p>
-<audio controls preload="auto">
-<source src="morning_news_2026-03-07.mp3" type="audio/mpeg">
-</audio>
-<p class="i">Updated daily at 6AM JST</p>
-</div></body></html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morning News Podcast</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      display: flex; justify-content: center; align-items: center; min-height: 100vh;
+    }
+    .card {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.12);
+      padding: 36px 32px; max-width: 480px; width: 90%; text-align: center;
+    }
+    .icon { font-size: 48px; margin-bottom: 12px; }
+    h1 { font-size: 1.5rem; color: #1a202c; margin-bottom: 4px; }
+    .date { color: #718096; font-size: .9rem; margin-bottom: 24px; }
+    audio { width: 100%; margin-bottom: 20px; border-radius: 8px; }
+    .speed-btns { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .speed-btns button {
+      padding: 6px 16px; border: 2px solid #4299e1; border-radius: 20px;
+      background: #fff; color: #4299e1; font-size: .85rem; font-weight: 600;
+      cursor: pointer; transition: background .2s, color .2s;
+    }
+    .speed-btns button.on { background: #4299e1; color: #fff; }
+    .speed-btns button:hover:not(.on) { background: #ebf8ff; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🎙️</div>
+    <h1>Morning News</h1>
+    <p class="date" id="today-date"></p>
+    <audio id="player" controls src="podcast.mp3"></audio>
+    <div class="speed-btns">
+      <button onclick="setSpeed(1.0)"   id="s1"    class="on">1.0x</button>
+      <button onclick="setSpeed(1.25)"  id="s1_25"       >1.25x</button>
+      <button onclick="setSpeed(1.5)"   id="s1_5"        >1.5x</button>
+      <button onclick="setSpeed(2.0)"   id="s2"          >2.0x</button>
+    </div>
+  </div>
+  <script>
+    const player = document.getElementById("player");
+    const btnMap = { s1: 1.0, s1_25: 1.25, s1_5: 1.5, s2: 2.0 };
+    function setSpeed(rate) {
+      player.playbackRate = rate;
+      Object.entries(btnMap).forEach(([id, r]) => {
+        document.getElementById(id).classList.toggle("on", r === rate);
+      });
+    }
+    const d = new Date();
+    const days = ["日曜日","月曜日","火曜日","水曜日","木曜日","金曜日","土曜日"];
+    document.getElementById("today-date").textContent =
+      d.getFullYear() + "年" + (d.getMonth()+1) + "月" + d.getDate() + "日" + days[d.getDay()];
+<\/script>
+</body>
+</html>
