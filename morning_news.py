@@ -50,6 +50,11 @@ STOCK_TICKERS = {
     "ドル円":   "JPY=X",
 }
 
+PORTFOLIO_TICKERS = {
+    "純金信託（1524）":  "1524.T",
+    "WTI原油ETF（1671）": "1671.T",
+}
+
 def fetch_rss(feeds, max_per_feed=3):
     items = []
     for name, url in feeds.items():
@@ -64,9 +69,11 @@ def fetch_rss(feeds, max_per_feed=3):
     return items
 
 
-def fetch_stock_prices():
+def fetch_stock_prices(tickers=None):
+    if tickers is None:
+        tickers = STOCK_TICKERS
     result = {}
-    for label, ticker in STOCK_TICKERS.items():
+    for label, ticker in tickers.items():
         try:
             data = yf.Ticker(ticker)
             hist = data.history(period="2d")
@@ -101,7 +108,7 @@ def fetch_weather():
         print(f"  天気取得エラー: {e}")
         return {}
 
-def generate_script(world_news, japan_news, stock_data, weather):
+def generate_script(world_news, japan_news, stock_data, weather, portfolio_data=None):
     if not GEMINI_API_KEY:
         print("FAIL: GEMINI_API_KEY が設定されていません")
         return None
@@ -118,6 +125,11 @@ def generate_script(world_news, japan_news, stock_data, weather):
         else:
             stock_lines.append(f"{label}: {price:,.2f}")
     stock_text = "\n".join(stock_lines) if stock_lines else "（取得なし）"
+
+    portfolio_lines = []
+    for label, price in (portfolio_data or {}).items():
+        portfolio_lines.append(f"{label}: {price:,.0f}円")
+    portfolio_text = "\n".join(portfolio_lines) if portfolio_lines else "（取得なし）"
 
     if weather:
         weather_text = (
@@ -145,8 +157,9 @@ def generate_script(world_news, japan_news, stock_data, weather):
 2. 世界のニュース2〜3本
 3. 日本の重要なニュース2〜3本
 4. 株価コーナー（日経平均・S&P500・ドル円）
-5. 福岡県久留米市の天気（最高気温・最低気温・降水確率、春は花粉と黄砂も）
-6. 締めの挨拶（名前なし）
+5. 保有株コーナー（純金信託・WTI原油ETF の現在値を読み上げる）
+6. 福岡県久留米市の天気（最高気温・最低気温・降水確率、春は花粉と黄砂も）
+7. 締めの挨拶（名前なし）
 
 「世界のニュース見出し」
 {world_text}
@@ -156,6 +169,9 @@ def generate_script(world_news, japan_news, stock_data, weather):
 
 「株価データ」
 {stock_text}
+
+「保有株データ」
+{portfolio_text}
 
 「天気データ（福岡県久留米市）」
 {weather_text}
@@ -291,12 +307,16 @@ def main():
     stock_data = fetch_stock_prices()
     print(f"  取得: {stock_data}")
 
+    print("\n[2.5] 保有株取得中...")
+    portfolio_data = fetch_stock_prices(PORTFOLIO_TICKERS)
+    print(f"  取得: {portfolio_data}")
+
     print("\n[3] 天気取得中（久留米市）...")
     weather = fetch_weather()
     print(f"  取得: {weather}")
 
     print("\n[4] 原稿生成中...")
-    script = generate_script(world_news, japan_news, stock_data, weather)
+    script = generate_script(world_news, japan_news, stock_data, weather, portfolio_data)
     if not script:
         print("\nFAIL: 原稿生成に失敗しました")
         exit(1)
