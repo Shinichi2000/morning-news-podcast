@@ -704,7 +704,7 @@ def main():
             s["max_hold_date"] = info.get("max_hold_date")
             portfolio_status_for_html.append(s)
 
-        update_player_html(portfolio_status_for_html, TODAY, f"morning_news_{TODAY}.mp3")
+        update_player_html(portfolio_status_for_html, TODAY, "podcast.mp3")
         print("\nDONE!")
     else:
         exit(1)
