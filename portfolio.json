@@ -1,0 +1,84 @@
+{
+  "last_updated": "2026-06-11T08:00:00+09:00",
+  "holdings": [
+    {
+      "id": "1540",
+      "ticker": "1540.T",
+      "name": "純金上場信託",
+      "thesis": "地政学ヘッジ",
+      "shares": 8,
+      "cost": 22819,
+      "currency": "JPY",
+      "stop_loss": 19400,
+      "take_profit": null,
+      "note": "停戦崩壊リスクのヘッジ。比率25%超でリバランス"
+    },
+    {
+      "id": "LMT",
+      "ticker": "LMT",
+      "name": "ロッキード・マーチン",
+      "thesis": "防衛・再エスカレーション",
+      "shares": 3,
+      "cost": 452.9,
+      "currency": "USD",
+      "stop_loss": 480,
+      "take_profit": 720,
+      "note": "Q2決算まで保有。再エスカレーション局面の中核"
+    },
+    {
+      "id": "NVDA",
+      "ticker": "NVDA",
+      "name": "エヌビディア",
+      "thesis": "AI・半導体成長",
+      "shares": 6,
+      "cost": 180.95,
+      "currency": "USD",
+      "stop_loss": 185,
+      "take_profit": 250,
+      "note": "AI需要の構造的成長"
+    },
+    {
+      "id": "4063",
+      "ticker": "4063.T",
+      "name": "信越化学工業",
+      "thesis": "AI・半導体成長",
+      "shares": 8,
+      "cost": 4379,
+      "currency": "JPY",
+      "stop_loss": 6130,
+      "take_profit": null,
+      "note": "S株。2/3利確済みの残り。来期ガイダンス未開示に注意"
+    },
+    {
+      "id": "8306",
+      "ticker": "8306.T",
+      "name": "三菱UFJフィナンシャル・グループ",
+      "thesis": "日銀利上げ受益",
+      "shares": 0,
+      "cost": 0,
+      "currency": "JPY",
+      "stop_loss": null,
+      "take_profit": null,
+      "note": "新規購入予定（約10万円）。購入後にshares/cost/stop_lossを更新"
+    },
+    {
+      "id": "SBI_V_ex_US",
+      "ticker": null,
+      "name": "SBI・V・先進国株式（除く米国）インデックスファンド",
+      "thesis": "米国外分散",
+      "shares": 72776,
+      "cost": 16489,
+      "currency": "JPY",
+      "stop_loss": null,
+      "take_profit": null,
+      "is_fund": true,
+      "note": "投資信託。yfinanceで取得不可。高値から-15%で解約検討"
+    }
+  ],
+  "rules": {
+    "max_single_position_pct": 25,
+    "max_single_thesis_pct": 35,
+    "min_cash_pct": 8,
+    "rebalance_day": "first_saturday"
+  }
+}

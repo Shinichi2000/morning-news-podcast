@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Portfolio設定 - Morning Brief</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="onair"><span class="onair-dot"></span>SETTINGS</div>
+    <h1>Portfolio設定</h1>
+  </div>
+
+  <div class="notice">
+    <strong>セキュリティ注意：</strong>
+    保存（方式A）にはファイングレインドPAT（対象リポジトリの <strong>Contents: Read/Write のみ</strong>）を使用します。
+    トークンはこのブラウザの localStorage にのみ保存され、コードやリポジトリには含まれません。
+    <strong>この運用はリポジトリがPrivateであることが前提です。</strong>
+    公開リポジトリで書き込み可能なPATを使う運用は行わないでください。
+    PAT未設定の場合は方式B（コミット用JSONの手動コピー）で動作します。
+  </div>
+
+  <div class="form-card">
+    <div class="form-row">
+      <label for="repoInput">リポジトリ（owner/repo）</label>
+      <input id="repoInput" type="text" autocomplete="off" placeholder="shinichi2000/morning-news-podcast">
+    </div>
+    <div class="form-row">
+      <label for="patInput">GitHub Personal Access Token（fine-grained）</label>
+      <input id="patInput" type="password" autocomplete="off" placeholder="github_pat_...">
+    </div>
+    <div class="card-actions">
+      <button class="btn small danger" id="clearPatBtn">トークン削除</button>
+      <button class="btn small primary" id="savePatBtn">接続設定を保存</button>
+    </div>
+    <div class="holding-meta" id="patStatus"></div>
+  </div>
+
+  <div class="status-msg" id="statusMsg"></div>
+
+  <div class="section-title">保有銘柄</div>
+  <div class="holding-meta" id="sourceNote" style="margin-bottom:10px"></div>
+  <div id="holdingsList"><div class="fund-note">読み込み中...</div></div>
+
+  <button class="btn" id="addBtn">＋ 銘柄を追加</button>
+
+  <div class="form-card" id="editForm" style="display:none; margin-top:14px;">
+    <div class="section-title" id="formTitle" style="margin-top:0">銘柄を追加</div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label for="f_id">id（一意の識別子）</label>
+        <input id="f_id" type="text" autocomplete="off" placeholder="例: 8306, NVDA">
+      </div>
+      <div class="form-row">
+        <label for="f_ticker">ticker（日本株: 1234.T / 米国株: 英字）</label>
+        <input id="f_ticker" type="text" autocomplete="off" placeholder="例: 8306.T, NVDA">
+      </div>
+    </div>
+    <div class="form-row">
+      <label for="f_name">銘柄名</label>
+      <input id="f_name" type="text" autocomplete="off">
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label for="f_thesis">投資テーゼ</label>
+        <select id="f_thesis">
+          <option>地政学ヘッジ</option>
+          <option>防衛・再エスカレーション</option>
+          <option>AI・半導体成長</option>
+          <option>日銀利上げ受益</option>
+          <option>米国外分散</option>
+          <option>その他</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="f_currency">通貨</label>
+        <select id="f_currency">
+          <option>JPY</option>
+          <option>USD</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="f_shares">株数（投信は口数）</label>
+        <input id="f_shares" type="number" inputmode="decimal" step="any" min="0">
+      </div>
+      <div class="form-row">
+        <label for="f_cost">取得単価</label>
+        <input id="f_cost" type="number" inputmode="decimal" step="any" min="0">
+      </div>
+      <div class="form-row">
+        <label for="f_stop_loss">損切りライン（空欄可）</label>
+        <input id="f_stop_loss" type="number" inputmode="decimal" step="any">
+      </div>
+      <div class="form-row">
+        <label for="f_take_profit">利確ライン（空欄可）</label>
+        <input id="f_take_profit" type="number" inputmode="decimal" step="any">
+      </div>
+    </div>
+    <div class="form-row">
+      <label for="f_note">メモ</label>
+      <textarea id="f_note" rows="2"></textarea>
+    </div>
+    <div class="form-row">
+      <label><input id="f_is_fund" type="checkbox" style="width:auto"> 投資信託（株価自動取得の対象外）</label>
+    </div>
+    <div class="form-error" id="formError"></div>
+    <div class="card-actions">
+      <button class="btn small" id="cancelBtn">キャンセル</button>
+      <button class="btn small primary" id="formSaveBtn">フォームを反映</button>
+    </div>
+  </div>
+
+  <button class="btn primary" id="commitBtn" style="margin-top:18px">保存（コミット）</button>
+
+  <div id="jsonOutWrap" style="display:none; margin-top:14px;">
+    <div class="section-title">方式B：コミット用JSON</div>
+    <div class="notice">下記の内容をリポジトリ直下の <strong>portfolio.json</strong> に手動でコミットしてください。</div>
+    <div class="form-row">
+      <textarea id="jsonOut" class="json-out" readonly onclick="this.select()"></textarea>
+    </div>
+  </div>
+
+  <a class="btn" href="index.html" style="margin-top:18px">← ダッシュボードに戻る</a>
+
+  <div class="footer">
+    <div class="disclaimer">※投資判断はご自身の責任で行ってください</div>
+  </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

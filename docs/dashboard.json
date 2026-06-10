@@ -1,0 +1,128 @@
+{
+  "date": "2026-06-11",
+  "date_jp": "2026年06月11日木曜日",
+  "weekday_theme": "セクター・ディープダイブ",
+  "rotating_segment": "ウォッチリスト",
+  "spotlight": null,
+  "is_rebalance_day": false,
+  "audio": "podcast.mp3",
+  "generated_at": "2026-06-11 01:57 JST",
+  "totals": {
+    "JPY": {
+      "market_value": 215968.0,
+      "pnl_amount": -1616.0,
+      "count": 2
+    },
+    "USD": {
+      "market_value": 2812.08,
+      "pnl_amount": 367.68,
+      "count": 2
+    }
+  },
+  "positions": [
+    {
+      "name": "純金上場信託",
+      "ticker": "1540.T",
+      "thesis": "地政学ヘッジ",
+      "currency": "JPY",
+      "symbol": "¥",
+      "price": 20160.0,
+      "cost": 22819,
+      "shares": 8,
+      "as_of": "2026-06-10",
+      "stale": false,
+      "pnl_pct": -11.7,
+      "market_value": 161280.0,
+      "pnl_amount": -21272.0,
+      "stop_loss": 19400,
+      "take_profit": null,
+      "note": "停戦崩壊リスクのヘッジ。比率25%超でリバランス",
+      "sl_gap_price": 760.0,
+      "sl_gap_pct": 3.8,
+      "sl_alert": true
+    },
+    {
+      "name": "ロッキード・マーチン",
+      "ticker": "LMT",
+      "thesis": "防衛・再エスカレーション",
+      "currency": "USD",
+      "symbol": "$",
+      "price": 531.92,
+      "cost": 452.9,
+      "shares": 3,
+      "as_of": "2026-06-10",
+      "stale": false,
+      "pnl_pct": 17.4,
+      "market_value": 1595.76,
+      "pnl_amount": 237.06,
+      "stop_loss": 480,
+      "take_profit": 720,
+      "note": "Q2決算まで保有。再エスカレーション局面の中核",
+      "sl_gap_price": 51.92,
+      "sl_gap_pct": 9.8,
+      "sl_alert": false,
+      "tp_gap_price": 188.08,
+      "tp_gap_pct": 35.4,
+      "tp_alert": false
+    },
+    {
+      "name": "エヌビディア",
+      "ticker": "NVDA",
+      "thesis": "AI・半導体成長",
+      "currency": "USD",
+      "symbol": "$",
+      "price": 202.72,
+      "cost": 180.95,
+      "shares": 6,
+      "as_of": "2026-06-10",
+      "stale": false,
+      "pnl_pct": 12.0,
+      "market_value": 1216.32,
+      "pnl_amount": 130.62,
+      "stop_loss": 185,
+      "take_profit": 250,
+      "note": "AI需要の構造的成長",
+      "sl_gap_price": 17.72,
+      "sl_gap_pct": 8.7,
+      "sl_alert": false,
+      "tp_gap_price": 47.28,
+      "tp_gap_pct": 23.3,
+      "tp_alert": false
+    },
+    {
+      "name": "信越化学工業",
+      "ticker": "4063.T",
+      "thesis": "AI・半導体成長",
+      "currency": "JPY",
+      "symbol": "¥",
+      "price": 6836.0,
+      "cost": 4379,
+      "shares": 8,
+      "as_of": "2026-06-09",
+      "stale": false,
+      "pnl_pct": 56.1,
+      "market_value": 54688.0,
+      "pnl_amount": 19656.0,
+      "stop_loss": 6130,
+      "take_profit": null,
+      "note": "S株。2/3利確済みの残り。来期ガイダンス未開示に注意",
+      "sl_gap_price": 706.0,
+      "sl_gap_pct": 10.3,
+      "sl_alert": false
+    }
+  ],
+  "funds": [
+    {
+      "name": "SBI・V・先進国株式（除く米国）インデックスファンド",
+      "thesis": "米国外分散",
+      "note": "投資信託。yfinanceで取得不可。高値から-15%で解約検討"
+    }
+  ],
+  "excluded": [
+    {
+      "name": "三菱UFJフィナンシャル・グループ",
+      "ticker": "8306.T",
+      "note": "新規購入予定（約10万円）。購入後にshares/cost/stop_lossを更新"
+    }
+  ]
+}
