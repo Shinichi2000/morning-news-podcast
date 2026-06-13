@@ -1,12 +1,12 @@
 {
-  "date": "2026-06-13",
-  "date_jp": "2026年06月13日土曜日",
-  "weekday_theme": "リバランス・レビュー",
-  "rotating_segment": "コントラリアン",
+  "date": "2026-06-14",
+  "date_jp": "2026年06月14日日曜日",
+  "weekday_theme": "ロング・ビュー",
+  "rotating_segment": "今日の数字",
   "spotlight": null,
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
-  "generated_at": "2026-06-13 07:26 JST",
+  "generated_at": "2026-06-14 07:07 JST",
   "totals": {
     "JPY": {
       "market_value": 217024.0,
