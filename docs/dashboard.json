@@ -1,12 +1,12 @@
 {
-  "date": "2026-06-21",
-  "date_jp": "2026年06月21日日曜日",
-  "weekday_theme": "ロング・ビュー",
-  "rotating_segment": "今日の数字",
-  "spotlight": null,
+  "date": "2026-06-22",
+  "date_jp": "2026年06月22日月曜日",
+  "weekday_theme": "ウィークリー・プレビュー",
+  "rotating_segment": "保有銘柄スポットライト",
+  "spotlight": "ロッキード・マーチン",
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
-  "generated_at": "2026-06-21 07:12 JST",
+  "generated_at": "2026-06-22 07:16 JST",
   "totals": {
     "JPY": {
       "market_value": 218400.0,
