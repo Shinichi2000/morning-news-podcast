@@ -1,24 +1,96 @@
 {
-  "date": "2026-06-11",
-  "date_jp": "2026年06月11日木曜日",
-  "weekday_theme": "セクター・ディープダイブ",
-  "rotating_segment": "ウォッチリスト",
-  "spotlight": null,
+  "date": "2026-07-06",
+  "date_jp": "2026年07月06日月曜日",
+  "weekday_theme": "ウィークリー・プレビュー",
+  "rotating_segment": "保有銘柄スポットライト",
+  "spotlight": "信越化学工業",
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
-  "generated_at": "2026-06-11 01:57 JST",
+  "audio_generated": true,
+  "script_file": null,
+  "recent_scripts": [
+    {
+      "date": "2026-06-10",
+      "file": "script_2026-06-10.txt"
+    },
+    {
+      "date": "2026-06-09",
+      "file": "script_2026-06-09.txt"
+    },
+    {
+      "date": "2026-06-08",
+      "file": "script_2026-06-08.txt"
+    },
+    {
+      "date": "2026-06-07",
+      "file": "script_2026-06-07.txt"
+    },
+    {
+      "date": "2026-06-06",
+      "file": "script_2026-06-06.txt"
+    },
+    {
+      "date": "2026-06-05",
+      "file": "script_2026-06-05.txt"
+    },
+    {
+      "date": "2026-06-04",
+      "file": "script_2026-06-04.txt"
+    }
+  ],
+  "generated_at": "2026-07-06 12:51 JST",
+  "market": [
+    {
+      "label": "S&P 500",
+      "price": 7483.24,
+      "as_of": "2026-07-02",
+      "stale": true
+    },
+    {
+      "label": "NASDAQ",
+      "price": 25832.67,
+      "as_of": "2026-07-02",
+      "stale": true
+    },
+    {
+      "label": "日経平均",
+      "price": 69144.5,
+      "as_of": "2026-07-06",
+      "stale": false
+    },
+    {
+      "label": "ドル円",
+      "price": 161.81,
+      "as_of": "2026-07-06",
+      "stale": false
+    },
+    {
+      "label": "WTI原油先物",
+      "price": 68.39,
+      "as_of": "2026-07-05",
+      "stale": false
+    },
+    {
+      "label": "金先物",
+      "price": 4176.1,
+      "as_of": "2026-07-05",
+      "stale": false
+    }
+  ],
+  "usdjpy": 161.81,
   "totals": {
     "JPY": {
-      "market_value": 215968.0,
-      "pnl_amount": -1616.0,
+      "market_value": 219752.0,
+      "pnl_amount": 2168.0,
       "count": 2
     },
     "USD": {
-      "market_value": 2812.08,
-      "pnl_amount": 367.68,
+      "market_value": 2806.71,
+      "pnl_amount": 362.31,
       "count": 2
     }
   },
+  "total_jpy": 673906,
   "positions": [
     {
       "name": "純金上場信託",
@@ -26,19 +98,19 @@
       "thesis": "地政学ヘッジ",
       "currency": "JPY",
       "symbol": "¥",
-      "price": 20160.0,
+      "price": 20285.0,
       "cost": 22819,
       "shares": 8,
-      "as_of": "2026-06-10",
+      "as_of": "2026-07-06",
       "stale": false,
-      "pnl_pct": -11.7,
-      "market_value": 161280.0,
-      "pnl_amount": -21272.0,
+      "pnl_pct": -11.1,
+      "market_value": 162280.0,
+      "pnl_amount": -20272.0,
       "stop_loss": 19400,
       "take_profit": null,
       "note": "停戦崩壊リスクのヘッジ。比率25%超でリバランス",
-      "sl_gap_price": 760.0,
-      "sl_gap_pct": 3.8,
+      "sl_gap_price": 885.0,
+      "sl_gap_pct": 4.4,
       "sl_alert": true
     },
     {
@@ -47,22 +119,22 @@
       "thesis": "防衛・再エスカレーション",
       "currency": "USD",
       "symbol": "$",
-      "price": 531.92,
+      "price": 545.91,
       "cost": 452.9,
       "shares": 3,
-      "as_of": "2026-06-10",
-      "stale": false,
-      "pnl_pct": 17.4,
-      "market_value": 1595.76,
-      "pnl_amount": 237.06,
+      "as_of": "2026-07-02",
+      "stale": true,
+      "pnl_pct": 20.5,
+      "market_value": 1637.73,
+      "pnl_amount": 279.03,
       "stop_loss": 480,
       "take_profit": 720,
       "note": "Q2決算まで保有。再エスカレーション局面の中核",
-      "sl_gap_price": 51.92,
-      "sl_gap_pct": 9.8,
+      "sl_gap_price": 65.91,
+      "sl_gap_pct": 12.1,
       "sl_alert": false,
-      "tp_gap_price": 188.08,
-      "tp_gap_pct": 35.4,
+      "tp_gap_price": 174.09,
+      "tp_gap_pct": 31.9,
       "tp_alert": false
     },
     {
@@ -71,22 +143,22 @@
       "thesis": "AI・半導体成長",
       "currency": "USD",
       "symbol": "$",
-      "price": 202.72,
+      "price": 194.83,
       "cost": 180.95,
       "shares": 6,
-      "as_of": "2026-06-10",
-      "stale": false,
-      "pnl_pct": 12.0,
-      "market_value": 1216.32,
-      "pnl_amount": 130.62,
+      "as_of": "2026-07-02",
+      "stale": true,
+      "pnl_pct": 7.7,
+      "market_value": 1168.98,
+      "pnl_amount": 83.28,
       "stop_loss": 185,
       "take_profit": 250,
       "note": "AI需要の構造的成長",
-      "sl_gap_price": 17.72,
-      "sl_gap_pct": 8.7,
+      "sl_gap_price": 9.83,
+      "sl_gap_pct": 5.0,
       "sl_alert": false,
-      "tp_gap_price": 47.28,
-      "tp_gap_pct": 23.3,
+      "tp_gap_price": 55.17,
+      "tp_gap_pct": 28.3,
       "tp_alert": false
     },
     {
@@ -95,19 +167,19 @@
       "thesis": "AI・半導体成長",
       "currency": "JPY",
       "symbol": "¥",
-      "price": 6836.0,
+      "price": 7184.0,
       "cost": 4379,
       "shares": 8,
-      "as_of": "2026-06-09",
+      "as_of": "2026-07-06",
       "stale": false,
-      "pnl_pct": 56.1,
-      "market_value": 54688.0,
-      "pnl_amount": 19656.0,
+      "pnl_pct": 64.1,
+      "market_value": 57472.0,
+      "pnl_amount": 22440.0,
       "stop_loss": 6130,
       "take_profit": null,
       "note": "S株。2/3利確済みの残り。来期ガイダンス未開示に注意",
-      "sl_gap_price": 706.0,
-      "sl_gap_pct": 10.3,
+      "sl_gap_price": 1054.0,
+      "sl_gap_pct": 14.7,
       "sl_alert": false
     }
   ],

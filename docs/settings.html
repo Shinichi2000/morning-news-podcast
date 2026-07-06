@@ -34,9 +34,19 @@
     </div>
     <div class="card-actions">
       <button class="btn small danger" id="clearPatBtn">トークン削除</button>
+      <button class="btn small" id="testPatBtn">接続テスト</button>
       <button class="btn small primary" id="savePatBtn">接続設定を保存</button>
     </div>
     <div class="holding-meta" id="patStatus"></div>
+  </div>
+
+  <div class="form-card">
+    <div class="section-title" style="margin-top:0">配信の再生成</div>
+    <div class="holding-meta" style="margin-bottom:10px">
+      生成に失敗した日や、ポートフォリオ変更を今すぐ反映したいときに、GitHub Actions を手動起動します。
+      PATに <strong>Actions: Read/Write</strong> 権限が必要です（Contents権限とは別）。
+    </div>
+    <button class="btn primary" id="regenBtn" style="margin-top:0">🎙 配信を再生成（Actions実行）</button>
   </div>
 
   <div class="status-msg" id="statusMsg"></div>

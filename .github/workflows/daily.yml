@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   generate:
@@ -32,14 +33,39 @@ jobs:
         run: python morning_news.py
 
       - name: 古いファイルを削除（7日以上前）
+        if: always()
         run: |
-          find docs/ -name "*.mp3" -mtime +7 -delete 2>/dev/null || true
-          find docs/ -name "*.txt" -mtime +7 -delete 2>/dev/null || true
+          # チェックアウト直後はmtimeが当てにならないため、ファイル名の日付で判定する
+          cutoff=$(date -d '7 days ago' +%Y-%m-%d)
+          for f in docs/script_*.txt; do
+            [ -e "$f" ] || continue
+            d=$(basename "$f" .txt | sed 's/^script_//')
+            if [[ "$d" < "$cutoff" ]]; then rm -f "$f"; echo "deleted: $f"; fi
+          done
+          for f in docs/morning_news_*.mp3; do
+            [ -e "$f" ] || continue
+            d=$(basename "$f" .mp3 | sed 's/^morning_news_//')
+            if [[ "$d" < "$cutoff" ]]; then rm -f "$f"; echo "deleted: $f"; fi
+          done
 
       - name: 生成ファイルをコミット＆プッシュ
+        # 原稿生成に失敗しても、更新済みの価格ダッシュボードはコミットする
+        if: always()
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add -f docs/
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "🎙️ $(date +%Y-%m-%d) モーニングニュース更新"
           git push
+
+      - name: 失敗時にIssueで通知
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "🔴 $(TZ=Asia/Tokyo date +%Y-%m-%d) の配信生成に失敗しました" \
+            --body "自動実行が失敗しました。ログ: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Gemini APIの503（過負荷）や429（クォータ超過）の場合、時間を置いて Actions の「Run workflow」またはサイトの Portfolio設定 →「配信を再生成」で再実行してください。（無料枠のクォータは日本時間の夕方頃にリセットされます）"

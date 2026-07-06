@@ -509,6 +509,19 @@ def generate_script(news_items, market_data, positions, portfolio):
     )
 
     client = genai.Client(api_key=GEMINI_API_KEY)
+    # 2巡構成：503（一時的過負荷）で全滅した場合に備え、60秒置いてもう一巡する
+    for round_num in range(2):
+        result = _try_generate(client, prompt)
+        if result:
+            return result
+        if round_num == 0:
+            print("  全モデル失敗。60秒待機して2巡目を試行します...")
+            time.sleep(60)
+
+    return None
+
+
+def _try_generate(client, prompt):
     for model in GEMINI_MODELS:
         for attempt in range(3):
             try:
@@ -549,6 +562,11 @@ def generate_script(news_items, market_data, positions, portfolio):
                     wait_sec = 30 * (attempt + 1)
                     print(f"  レート制限 - {wait_sec}秒待機...")
                     time.sleep(wait_sec)
+                elif "503" in err_str or "UNAVAILABLE" in err_str or "overloaded" in err_str.lower():
+                    # 一時的なサーバー過負荷。少し待って同じモデルを再試行する
+                    wait_sec = 15 * (attempt + 1)
+                    print(f"  サーバー過負荷 - {wait_sec}秒待機してリトライ...")
+                    time.sleep(wait_sec)
                 else:
                     break
 
@@ -568,7 +586,18 @@ async def generate_audio(script, output_path):
 
 # ===== サイト用データ・HTML生成（課題3）=====
 
-def build_dashboard_data(positions, portfolio, mp3_filename):
+def list_recent_scripts(limit=7):
+    """サイトのアーカイブ表示用に、残っている原稿ファイルを新しい順で返す"""
+    files = sorted(glob.glob(os.path.join(OUTPUT_DIR, "script_*.txt")), reverse=True)[:limit]
+    out = []
+    for f in files:
+        m = re.search(r"script_(\d{4}-\d{2}-\d{2})\.txt$", f)
+        if m:
+            out.append({"date": m.group(1), "file": os.path.basename(f)})
+    return out
+
+
+def build_dashboard_data(positions, market_data, portfolio, mp3_filename, audio_ok):
     """app.js が fetch して描画する dashboard.json を構築"""
     today_date = NOW_JST.date()
     theme = get_weekday_theme(today_date)
@@ -587,6 +616,22 @@ def build_dashboard_data(positions, portfolio, mp3_filename):
         t["pnl_amount"] = round(t["pnl_amount"] + p["pnl_amount"], 2)
         t["count"] += 1
 
+    # ドル円レートがあれば円換算の総資産も算出（検証可能なようにレートも出力）
+    usdjpy = None
+    if "ドル円" in market_data and market_data["ドル円"]["price"]:
+        usdjpy = market_data["ドル円"]["price"]
+    total_jpy = None
+    if usdjpy is not None:
+        total_jpy = round(
+            totals.get("JPY", {}).get("market_value", 0)
+            + totals.get("USD", {}).get("market_value", 0) * usdjpy
+        )
+
+    market_list = [
+        {"label": label, "price": info["price"], "as_of": info["as_of"], "stale": info["stale"]}
+        for label, info in market_data.items()
+    ]
+
     excluded = [
         {"name": h["name"], "ticker": h.get("ticker"), "note": h.get("note", "")}
         for h in portfolio["holdings"]
@@ -597,6 +642,9 @@ def build_dashboard_data(positions, portfolio, mp3_filename):
         for h in fund_holdings(portfolio)
     ]
 
+    scripts = list_recent_scripts()
+    script_file = next((s["file"] for s in scripts if s["date"] == TODAY), None)
+
     return {
         "date": TODAY,
         "date_jp": TODAY_JP,
@@ -605,17 +653,23 @@ def build_dashboard_data(positions, portfolio, mp3_filename):
         "spotlight": spotlight,
         "is_rebalance_day": is_first_saturday(today_date),
         "audio": mp3_filename,
+        "audio_generated": audio_ok,
+        "script_file": script_file,
+        "recent_scripts": scripts,
         "generated_at": NOW_JST.strftime("%Y-%m-%d %H:%M JST"),
+        "market": market_list,
+        "usdjpy": usdjpy,
         "totals": totals,
+        "total_jpy": total_jpy,
         "positions": positions,
         "funds": funds,
         "excluded": excluded,
     }
 
 
-def update_site_data(positions, portfolio, mp3_filename):
+def update_site_data(positions, market_data, portfolio, mp3_filename, audio_ok=True):
     """dashboard.json の生成と portfolio.json の docs/ への同期"""
-    dashboard = build_dashboard_data(positions, portfolio, mp3_filename)
+    dashboard = build_dashboard_data(positions, market_data, portfolio, mp3_filename, audio_ok)
     dash_path = os.path.join(OUTPUT_DIR, "dashboard.json")
     with open(dash_path, "w", encoding="utf-8") as f:
         json.dump(dashboard, f, ensure_ascii=False, indent=2)
@@ -673,6 +727,8 @@ def main():
     script = generate_script(news_items, market_data, positions, portfolio)
     if not script:
         print("\nFAIL: 原稿生成に失敗しました")
+        # 音声は作れなくても、価格ダッシュボードだけは最新化してサイトに反映する
+        update_site_data(positions, market_data, portfolio, "podcast.mp3", audio_ok=False)
         exit(1)
 
     script_path = os.path.join(OUTPUT_DIR, "script_" + TODAY + ".txt")
@@ -683,10 +739,11 @@ def main():
     print("\n[5] 音声生成中...")
     success = asyncio.run(generate_audio(script, OUTPUT_MP3))
     if not success:
+        update_site_data(positions, market_data, portfolio, "podcast.mp3", audio_ok=False)
         exit(1)
 
     print("\n[6] サイトデータ更新中...")
-    update_site_data(positions, portfolio, "podcast.mp3")
+    update_site_data(positions, market_data, portfolio, "podcast.mp3", audio_ok=True)
     print("\nDONE!")
 
 

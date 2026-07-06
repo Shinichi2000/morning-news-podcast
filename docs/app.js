@@ -43,14 +43,83 @@
         $("segment").textContent = seg;
         if (d.audio) $("player").src = d.audio + "?t=" + encodeURIComponent(d.date || "");
         $("updated").textContent = "Last updated: " + (d.generated_at || "");
+        renderNotice(d);
+        renderMarket(d);
         renderSummary(d);
         renderHoldings(d);
+        renderScriptBox(d);
+        renderArchive(d);
       })
       .catch(function (e) {
         $("holdings").innerHTML =
           '<div class="stock-card"><div class="fund-note">ダッシュボードデータがまだ生成されていません。次回の自動実行後に表示されます。（' +
           esc(e.message) + "）</div></div>";
       });
+  }
+
+  function jstToday() {
+    var jst = new Date(Date.now() + 9 * 3600 * 1000);
+    return jst.toISOString().slice(0, 10);
+  }
+
+  function renderNotice(d) {
+    var msgs = [];
+    if (d.date && d.date !== jstToday()) {
+      msgs.push("表示中のデータは " + d.date + " 生成分です（本日分はまだ生成されていません）");
+    }
+    if (d.audio_generated === false) {
+      msgs.push("この日の音声生成は失敗しました。価格データは最新ですが、プレーヤーは前回配信分です。設定画面の「配信を再生成」で再実行できます");
+    }
+    $("notice").innerHTML = msgs.map(function (m) {
+      return '<div class="notice warn">⚠ ' + esc(m) + "</div>";
+    }).join("");
+  }
+
+  function renderMarket(d) {
+    var m = d.market || [];
+    if (!m.length) { $("market").innerHTML = ""; return; }
+    var html = m.map(function (x) {
+      var val;
+      if (x.label === "ドル円") val = x.price.toFixed(2) + "円";
+      else if (x.label === "WTI原油先物" || x.label === "金先物") val = "$" + fmtNum(x.price, "USD");
+      else if (x.label === "日経平均") val = fmtNum(x.price, "USD") + "円";
+      else val = fmtNum(x.price, "USD");
+      return (
+        '<div class="market-chip"><span class="chip-label">' + esc(x.label) + "</span>" +
+        '<span class="chip-value num">' + val + (x.stale ? " ⚠" : "") + "</span></div>"
+      );
+    }).join("");
+    $("market").innerHTML =
+      '<div class="section-title">Market</div><div class="market-row">' + html + "</div>" +
+      '<div class="as-of" style="margin-top:6px">各指標は直近営業日の終値（⚠＝取得日が3日以上前）</div>';
+  }
+
+  function renderScriptBox(d) {
+    if (!d.script_file) { $("scriptBox").innerHTML = ""; return; }
+    $("scriptBox").innerHTML =
+      '<details class="script-details"><summary>📄 今日の原稿を読む</summary>' +
+      '<div class="script-text" id="scriptText">読み込み中...</div></details>';
+    var loaded = false;
+    $("scriptBox").querySelector("details").addEventListener("toggle", function () {
+      if (loaded || !this.open) return;
+      loaded = true;
+      fetch(d.script_file + "?t=" + Date.now())
+        .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+        .then(function (t) { $("scriptText").textContent = t; })
+        .catch(function (e) { $("scriptText").textContent = "原稿を読み込めませんでした: " + e.message; });
+    });
+  }
+
+  function renderArchive(d) {
+    var scripts = (d.recent_scripts || []).filter(function (s) { return s.date !== d.date; });
+    if (!scripts.length) { $("archive").innerHTML = ""; return; }
+    $("archive").innerHTML =
+      '<details class="script-details"><summary>🗂 過去の原稿（' + scripts.length + "日分）</summary>" +
+      '<div class="archive-list">' +
+      scripts.map(function (s) {
+        return '<a class="archive-link" href="' + esc(s.file) + '" target="_blank" rel="noopener">' + esc(s.date) + "</a>";
+      }).join("") +
+      "</div></details>";
   }
 
   function renderSummary(d) {
@@ -67,7 +136,16 @@
         (t.pnl_amount >= 0 ? "+" : "") + fmtNum(t.pnl_amount, cur) + "</div>" +
         "</div>";
     });
-    $("summary").innerHTML = html ? '<div class="summary-row">' + html + "</div>" : "";
+    var wide = "";
+    if (d.total_jpy != null) {
+      wide =
+        '<div class="summary-card wide">' +
+        '<div class="label">総資産（円換算・投信除く）</div>' +
+        '<div class="value num">¥' + d.total_jpy.toLocaleString("ja-JP") + "</div>" +
+        '<div class="sub" style="color:var(--text-dim)">@' + d.usdjpy.toFixed(2) + "円/ドルで換算</div>" +
+        "</div>";
+    }
+    $("summary").innerHTML = (html ? '<div class="summary-row">' + html + "</div>" : "") + wide;
   }
 
   function lineBox(label, cls, valueHtml, gapHtml) {
@@ -208,6 +286,41 @@
       $("patInput").value = "";
       updatePatStatus();
       setStatus("トークンを削除しました", true);
+    });
+    $("testPatBtn").addEventListener("click", function () {
+      if (!getPat()) { setStatus("PATが未設定です", false); return; }
+      setStatus("接続テスト中...", true);
+      fetch(apiUrl(), { headers: apiHeaders() })
+        .then(function (r) {
+          if (r.ok) setStatus("接続OK：" + getRepo() + " の portfolio.json を読み取れました", true);
+          else if (r.status === 401) setStatus("接続NG（401）：トークンが無効か期限切れです", false);
+          else if (r.status === 403) setStatus("接続NG（403）：権限不足です。Contents: Read/Write を確認してください", false);
+          else if (r.status === 404) setStatus("接続NG（404）：リポジトリ名の誤りか、PATにこのリポジトリへのアクセス権がありません", false);
+          else setStatus("接続NG（HTTP " + r.status + "）", false);
+        })
+        .catch(function (e) { setStatus("接続NG: " + e.message, false); });
+    });
+    $("regenBtn").addEventListener("click", function () {
+      if (!getPat()) { setStatus("再生成にはPATが必要です（Actions: Read/Write権限）", false); return; }
+      if (!confirm("GitHub Actions を起動して配信を再生成しますか？（数分かかります）")) return;
+      setStatus("Actions を起動中...", true);
+      fetch("https://api.github.com/repos/" + getRepo() + "/actions/workflows/daily.yml/dispatches", {
+        method: "POST",
+        headers: apiHeaders(),
+        body: JSON.stringify({ ref: "main" }),
+      })
+        .then(function (r) {
+          if (r.status === 204) {
+            setStatus("再生成を開始しました。5〜10分後にこのページを再読み込みしてください", true);
+          } else if (r.status === 403) {
+            setStatus("起動できません（403）：PATに Actions: Read/Write 権限を追加してください", false);
+          } else {
+            return r.json().then(function (j) {
+              setStatus("起動できません（HTTP " + r.status + "）: " + (j.message || ""), false);
+            });
+          }
+        })
+        .catch(function (e) { setStatus("起動できません: " + e.message, false); });
     });
     $("addBtn").addEventListener("click", function () { openForm(null); });
     $("cancelBtn").addEventListener("click", closeForm);

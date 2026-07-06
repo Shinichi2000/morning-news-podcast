@@ -171,6 +171,48 @@ body {
   background: rgba(245, 166, 35, 0.08); border: 1px solid rgba(245, 166, 35, 0.25);
   border-radius: 10px; padding: 10px 12px; margin-bottom: 14px;
 }
+.notice.warn {
+  color: var(--text); border-color: rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.1); margin-top: 12px;
+}
+
+/* ===== Market chips ===== */
+.market-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+}
+.market-chip {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 8px 10px; text-align: center;
+}
+.chip-label { display: block; font-size: 10px; color: var(--text-dim); margin-bottom: 2px; white-space: nowrap; }
+.chip-value { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; }
+
+/* ===== Summary wide card ===== */
+.summary-card.wide { flex: none; width: 100%; margin-bottom: 14px; }
+.summary-card.wide .value { font-size: 24px; }
+
+/* ===== Script reader / archive ===== */
+.script-details {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 12px; margin-top: 14px; overflow: hidden;
+}
+.script-details summary {
+  padding: 12px 14px; font-size: 14px; font-weight: 600;
+  cursor: pointer; list-style: none;
+}
+.script-details summary::-webkit-details-marker { display: none; }
+.script-details[open] summary { border-bottom: 1px solid var(--card-border); }
+.script-text {
+  padding: 14px; font-size: 13px; line-height: 1.9;
+  white-space: pre-wrap; color: var(--text);
+  max-height: 60vh; overflow-y: auto;
+}
+.archive-list { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+.archive-link {
+  font-size: 12px; font-weight: 600; color: var(--teal);
+  border: 1px solid rgba(61, 214, 196, 0.4); border-radius: 999px;
+  padding: 4px 12px; text-decoration: none;
+}
 .notice strong { color: var(--amber); }
 .status-msg { font-size: 13px; margin: 10px 0; min-height: 18px; }
 .status-msg.ok { color: var(--teal); }
