@@ -5,6 +5,7 @@ import glob
 import datetime
 import asyncio
 import time
+import random
 from collections import Counter
 
 import requests
@@ -26,23 +27,27 @@ VOICE = "ja-JP-NanamiNeural"
 PORTFOLIO_PATH = "portfolio.json"
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+# クォータに優しい軽量モデルを優先し、徐々に上位モデルへフォールバックする。
+# 無料枠では flash-lite 系のレート上限が比較的緩いため最優先に置く。
 GEMINI_MODELS = [
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
-    "gemini-2.0-flash",
+    "gemini-2.5-flash-lite",
     "gemini-2.0-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.5-pro",
 ]
+
+# 1モデルあたりの最大リトライ回数
+MAX_RETRIES_PER_MODEL = 4
 
 # 原稿の最低文字数（これを下回る場合は生成失敗と見なす）
 MIN_SCRIPT_LENGTH = 1500
-
 
 # ===== ポートフォリオ（portfolio.json が唯一の正）=====
 
 def load_portfolio(path=PORTFOLIO_PATH):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
-
 
 def active_holdings(portfolio):
     """株価取得・原稿・サイト表示の対象銘柄（未購入 shares==0 と投資信託を除外）"""
@@ -51,10 +56,8 @@ def active_holdings(portfolio):
         if h.get("shares", 0) > 0 and not h.get("is_fund") and h.get("ticker")
     ]
 
-
 def fund_holdings(portfolio):
     return [h for h in portfolio["holdings"] if h.get("is_fund")]
-
 
 # ===== 日替わり構成エンジン =====
 
@@ -107,17 +110,14 @@ OPENING_STYLES = [
     "端的に『今日の3つのポイント』を予告してから始める",
 ]
 
-
 def is_first_saturday(d):
     return d.weekday() == 5 and d.day <= 7
-
 
 def get_weekday_theme(d):
     theme = dict(WEEKDAY_THEMES[d.weekday()])
     if is_first_saturday(d):
         theme["focus"] += "【本日は月初第1土曜＝リバランス日です。クロージングで「本日はリバランス日です。逆指値の更新を忘れずに」と必ず促してください】"
     return theme
-
 
 def pick_segment(d, holdings):
     """日付から決定的に特集を選ぶ（7日周期で循環し重複しない）"""
@@ -129,10 +129,8 @@ def pick_segment(d, holdings):
         segment += f"（本日の対象：{spotlight['name']}）"
     return segment
 
-
 def pick_opening_style(d):
     return OPENING_STYLES[d.toordinal() % len(OPENING_STYLES)]
-
 
 def extract_recent_phrases(output_dir=OUTPUT_DIR, days=7, max_phrases=15):
     """直近の生成原稿から頻出フレーズ（特にオープニング・クロージング・定型文）を抽出"""
@@ -165,7 +163,6 @@ def extract_recent_phrases(output_dir=OUTPUT_DIR, days=7, max_phrases=15):
         if p not in seen:
             seen.append(p)
     return seen[:max_phrases]
-
 
 # ===== マーケット指標 =====
 MARKET_INDICES = {
@@ -211,29 +208,29 @@ SCRIPT_PROMPT = """あなたは経済情報番組の構成作家兼ナレータ�
 1. オープニング（指定された入り方で。キャスター名の自己紹介はしない。「皆さん」等の複数呼びかけもしない。リスナーは一人）
 
 2. 国際ニュース（火曜は厚め、それ以外は標準）
-   - 各ニュースは「何が起きたか」+「なぜ重要か」+「市場への含意」をセットで
-   - 中東情勢は保有銘柄（金、LMT）への波及とセットで語る
+- 各ニュースは「何が起きたか」+「なぜ重要か」+「市場への含意」をセットで
+- 中東情勢は保有銘柄（金、LMT）への波及とセットで語る
 
 3. 国内ニュース
-   - 日銀・為替・日経平均は必ず触れる。金融政策は三菱UFJへの含意とセットで
+- 日銀・為替・日経平均は必ず触れる。金融政策は三菱UFJへの含意とセットで
 
 4. マーケット概況（数値には必ず「いつ時点」かを付す）
 
 5. 本日のローテーション特集コーナー（上記指定のコーナーをここで展開。2〜3分）
 
 6. 保有ポートフォリオ報告
-   - 全銘柄を機械的に読まない。以下の優先順位で2〜4銘柄を選ぶ：
-     a. アラート銘柄（損切り/利確ラインまで5%以内）は必ず
-     b. 前日比±2%以上の銘柄
-     c. 本日のニュースに関連する銘柄
-   - 各銘柄は「取得日（as_of）時点の終値」「損益率」「損切り/利確ラインの価格とそこまでの距離（円/ドルと％）」を読む
-   - ライン距離は「損切り480ドルまであと約50ドル、現在値から9パーセント下」のように価格と％の両方を読み上げ、片方だけに依存しない
-   - staleフラグのある銘柄は「最新データが取得できず○月○日時点」と明示
-   - 金曜は全銘柄の週間サマリー
+- 全銘柄を機械的に読まない。以下の優先順位で2〜4銘柄を選ぶ：
+  a. アラート銘柄（損切り/利確ラインまで5%以内）は必ず
+  b. 前日比±2%以上の銘柄
+  c. 本日のニュースに関連する銘柄
+- 各銘柄は「取得日（as_of）時点の終値」「損益率」「損切り/利確ラインの価格とそこまでの距離（円/ドルと％）」を読む
+- ライン距離は「損切り480ドルまであと約50ドル、現在値から9パーセント下」のように価格と％の両方を読み上げ、片方だけに依存しない
+- staleフラグのある銘柄は「最新データが取得できず○月○日時点」と明示
+- 金曜は全銘柄の週間サマリー
 
 7. クロージング
-   - 今週/翌営業日の重要経済指標・イベントを日付とともに予告
-   - 第1土曜の回は「本日はリバランス日です。逆指値の更新を忘れずに」と促す
+- 今週/翌営業日の重要経済指標・イベントを日付とともに予告
+- 第1土曜の回は「本日はリバランス日です。逆指値の更新を忘れずに」と促す
 
 【禁止事項】
 - 天気・気温・花粉・服装・芸能・スポーツは入れない
@@ -267,7 +264,6 @@ SCRIPT_PROMPT = """あなたは経済情報番組の構成作家兼ナレータ�
 {today}（{weekday_jp}）
 """
 
-
 def fetch_rss(feeds, max_per_feed=RSS_MAX_ENTRIES):
     items = []
     for name, url in feeds.items():
@@ -285,7 +281,6 @@ def fetch_rss(feeds, max_per_feed=RSS_MAX_ENTRIES):
             print(f"  RSS取得エラー ({name}): {e}")
     return items
 
-
 # ===== 株価取得の堅牢化（課題1）=====
 
 def fetch_price_robust(ticker):
@@ -300,7 +295,6 @@ def fetch_price_robust(ticker):
         if data.empty:
             return {"price": None, "as_of": None, "stale": True, "error": "データ取得不可"}
 
-        # 最新の有効な終値を後ろから探す
         valid = data["Close"].dropna()
         valid = valid[valid > 0]
         if valid.empty:
@@ -309,7 +303,6 @@ def fetch_price_robust(ticker):
         last_price = float(valid.iloc[-1])
         last_date = valid.index[-1].to_pydatetime()
 
-        # 鮮度チェック：最終取引日が3日以上前ならstale扱い
         days_old = (datetime.datetime.now() - last_date.replace(tzinfo=None)).days
         stale = days_old > 3
 
@@ -322,7 +315,6 @@ def fetch_price_robust(ticker):
     except Exception as e:
         return {"price": None, "as_of": None, "stale": True, "error": str(e)}
 
-
 def fetch_market_indices():
     """マーケット指標を取得（as_of・stale付き）"""
     result = {}
@@ -333,7 +325,6 @@ def fetch_market_indices():
         else:
             print(f"  指標取得エラー ({label}): {info['error']}")
     return result
-
 
 # ===== 損益・ライン距離計算の明示化と検証（課題1）=====
 
@@ -347,9 +338,7 @@ def calc_position(holding, price_info):
     cur = holding["currency"]
     sym = "$" if cur == "USD" else "¥"
 
-    # 損益率（取得単価ベース）
     pnl_pct = round((price - cost) / cost * 100, 1)
-    # 評価額・損益額
     market_value = round(price * holding["shares"], 2)
     pnl_amount = round((price - cost) * holding["shares"], 2)
 
@@ -370,13 +359,11 @@ def calc_position(holding, price_info):
         "note": holding.get("note", ""),
     }
 
-    # 損切りラインまでの距離（価格と％を両方）
     if holding.get("stop_loss"):
         sl = holding["stop_loss"]
-        result["sl_gap_price"] = round(price - sl, 2)               # あと何円/ドルで到達
-        result["sl_gap_pct"] = round((price - sl) / price * 100, 1)  # 現在値から何％下
+        result["sl_gap_price"] = round(price - sl, 2)
+        result["sl_gap_pct"] = round((price - sl) / price * 100, 1)
         result["sl_alert"] = result["sl_gap_pct"] < 5
-    # 利確ラインまでの距離
     if holding.get("take_profit"):
         tp = holding["take_profit"]
         result["tp_gap_price"] = round(tp - price, 2)
@@ -384,7 +371,6 @@ def calc_position(holding, price_info):
         result["tp_alert"] = result["tp_gap_pct"] < 5
 
     return result
-
 
 def build_positions(portfolio):
     """全アクティブ銘柄の価格取得＋損益計算"""
@@ -406,14 +392,12 @@ def build_positions(portfolio):
             positions.append(pos)
     return positions
 
-
 def fmt_num(value, currency):
     if value is None:
         return "—"
     if currency == "JPY":
         return f"{value:,.0f}" if float(value) == int(value) else f"{value:,.2f}"
     return f"{value:,.2f}"
-
 
 def format_market_text(market_data):
     lines = []
@@ -430,7 +414,6 @@ def format_market_text(market_data):
         else:
             lines.append(f"{label}: {price:,.2f}円 {as_of}")
     return "\n".join(lines) if lines else "（取得なし）"
-
 
 def format_portfolio_text(positions, portfolio):
     lines = []
@@ -468,7 +451,6 @@ def format_portfolio_text(positions, portfolio):
             line += f" / メモ: {p['note']}"
         lines.append(line)
 
-    # 投資信託（yfinance取得不可）
     for fund in fund_holdings(portfolio):
         lines.append(
             f"【{fund['name']}】 投資信託のため株価取得不可。"
@@ -477,6 +459,19 @@ def format_portfolio_text(positions, portfolio):
 
     return "\n".join(lines) if lines else "（保有銘柄なし）"
 
+def _classify_error(err_str):
+    """例外メッセージから、リトライ可能な一時エラーかを判定する"""
+    s = err_str.lower()
+    # クォータ/レート制限（429）
+    if "429" in err_str or "quota" in s or "resource_exhausted" in s or "rate limit" in s or "ratelimit" in s:
+        return "rate_limit"
+    # サーバ側の一時的過負荷・障害（500/502/503/504）
+    if ("503" in err_str or "unavailable" in s or "overloaded" in s
+            or "500" in err_str or "internal" in s
+            or "502" in err_str or "504" in err_str
+            or "deadline" in s or "timeout" in s):
+        return "server"
+    return "fatal"
 
 def generate_script(news_items, market_data, positions, portfolio):
     if not GEMINI_API_KEY:
@@ -513,69 +508,68 @@ def generate_script(news_items, market_data, positions, portfolio):
     )
 
     client = genai.Client(api_key=GEMINI_API_KEY)
-    # 2巡構成：503（一時的過負荷）で全滅した場合に備え、60秒置いてもう一巡する
-    for round_num in range(2):
-        result = _try_generate(client, prompt)
-        if result:
-            return result
-        if round_num == 0:
-            print("  全モデル失敗。60秒待機して2巡目を試行します...")
-            time.sleep(60)
 
-    return None
-
-
-def _try_generate(client, prompt):
-    for model in GEMINI_MODELS:
-        for attempt in range(3):
-            try:
-                response = client.models.generate_content(
-                    model=model,
-                    contents=prompt,
-                    config=genai.types.GenerateContentConfig(
-                        temperature=0.7,
-                        max_output_tokens=8192,
-                    ),
-                )
-
-                finish_reason = None
+    # モデルを順に試し、各モデルで一時エラー時は指数バックオフ＋ジッターでリトライ。
+    # 429/503/500 系はすべてリトライ対象とし、全モデルを2巡する。
+    for sweep in range(2):
+        for model in GEMINI_MODELS:
+            for attempt in range(MAX_RETRIES_PER_MODEL):
                 try:
-                    finish_reason = response.candidates[0].finish_reason
-                except Exception:
-                    pass
+                    response = client.models.generate_content(
+                        model=model,
+                        contents=prompt,
+                        config=genai.types.GenerateContentConfig(
+                            temperature=0.7,
+                            max_output_tokens=8192,
+                        ),
+                    )
 
-                text = response.text.strip() if response.text else ""
+                    finish_reason = None
+                    try:
+                        finish_reason = response.candidates[0].finish_reason
+                    except Exception:
+                        pass
 
-                if finish_reason and str(finish_reason) in ("FinishReason.MAX_TOKENS", "MAX_TOKENS", "2"):
-                    print(f"  NG: {model} attempt {attempt+1} → MAX_TOKENS で出力が打ち切られました（{len(text)}文字）。リトライします...")
-                    time.sleep(5)
-                    continue
+                    text = response.text.strip() if response.text else ""
 
-                if len(text) < MIN_SCRIPT_LENGTH:
-                    print(f"  NG: {model} attempt {attempt+1} → 原稿が短すぎます（{len(text)}文字 < {MIN_SCRIPT_LENGTH}文字）。リトライします...")
-                    time.sleep(5)
-                    continue
+                    if finish_reason and str(finish_reason) in ("FinishReason.MAX_TOKENS", "MAX_TOKENS", "2"):
+                        print(f"  NG: {model} sweep {sweep+1} attempt {attempt+1} → MAX_TOKENS で出力が打ち切られました（{len(text)}文字）。リトライします...")
+                        time.sleep(5)
+                        continue
 
-                print(f"  OK: {model} で原稿生成完了（{len(text)}文字、finish_reason={finish_reason}）")
-                return text
+                    if len(text) < MIN_SCRIPT_LENGTH:
+                        print(f"  NG: {model} sweep {sweep+1} attempt {attempt+1} → 原稿が短すぎます（{len(text)}文字 < {MIN_SCRIPT_LENGTH}文字）。リトライします...")
+                        time.sleep(5)
+                        continue
 
-            except Exception as e:
-                err_str = str(e)
-                print(f"  NG: {model} attempt {attempt+1} → {err_str[:100]}")
-                if "429" in err_str or "quota" in err_str.lower() or "Resource" in err_str:
-                    wait_sec = 30 * (attempt + 1)
-                    print(f"  レート制限 - {wait_sec}秒待機...")
+                    print(f"  OK: {model} で原稿生成完了（{len(text)}文字、finish_reason={finish_reason}）")
+                    return text
+
+                except Exception as e:
+                    err_str = str(e)
+                    kind = _classify_error(err_str)
+                    print(f"  NG: {model} sweep {sweep+1} attempt {attempt+1} → [{kind}] {err_str[:120]}")
+
+                    if kind == "fatal":
+                        # 認証エラー・モデル名不正など。このモデルはこれ以上試さず次モデルへ
+                        break
+
+                    if attempt == MAX_RETRIES_PER_MODEL - 1:
+                        # このモデルのリトライ上限。次モデルへフォールバック
+                        break
+
+                    # 指数バックオフ＋ジッター。rate_limit はやや長めに待つ
+                    base = 20 if kind == "rate_limit" else 8
+                    wait_sec = min(base * (2 ** attempt), 120) + random.uniform(0, 5)
+                    print(f"  {kind} - {wait_sec:.0f}秒待機して再試行...")
                     time.sleep(wait_sec)
-                elif "503" in err_str or "UNAVAILABLE" in err_str or "overloaded" in err_str.lower():
-                    # 一時的なサーバー過負荷。少し待って同じモデルを再試行する
-                    wait_sec = 15 * (attempt + 1)
-                    print(f"  サーバー過負荷 - {wait_sec}秒待機してリトライ...")
-                    time.sleep(wait_sec)
-                else:
-                    break
+
+        # 1巡目で全滅した場合、少し長く待ってから2巡目（クォータ回復・過負荷解消を期待）
+        if sweep == 0:
+            print("  全モデルで失敗。90秒待機して全モデルを再試行します...")
+            time.sleep(90)
 
     return None
-
 
 # ===== TTS読み上げ正規化（読み間違い対策）=====
 # 読み間違いに気づいたら、このリストに（誤読される表記, 正しい読み）を追記するだけで直せる。
@@ -660,7 +654,6 @@ async def generate_audio(script, output_path):
     except Exception as e:
         print(f"  FAIL: 音声生成エラー → {e}")
         return False
-
 
 # ===== サイト用データ・HTML生成（課題3）=====
 
@@ -753,14 +746,12 @@ def update_site_data(positions, market_data, portfolio, mp3_filename, audio_ok=T
         json.dump(dashboard, f, ensure_ascii=False, indent=2)
     print(f"  OK: dashboard.json 更新 → {dash_path}")
 
-    # 設定画面・ダッシュボードのフォールバック読み込み用に docs/ へ同期
     sync_path = os.path.join(OUTPUT_DIR, "portfolio.json")
     with open(PORTFOLIO_PATH, "r", encoding="utf-8") as src:
         content = src.read()
     with open(sync_path, "w", encoding="utf-8") as dst:
         dst.write(content)
     print(f"  OK: portfolio.json 同期 → {sync_path}")
-
 
 def main():
     print("=" * 50)
@@ -823,7 +814,6 @@ def main():
     print("\n[6] サイトデータ更新中...")
     update_site_data(positions, market_data, portfolio, "podcast.mp3", audio_ok=True)
     print("\nDONE!")
-
 
 if __name__ == "__main__":
     main()
