@@ -6,11 +6,82 @@
   "spotlight": "信越化学工業",
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
-  "generated_at": "2026-07-06 19:41 JST",
+  "audio_generated": true,
+  "script_file": null,
+  "recent_scripts": [
+    {
+      "date": "2026-06-10",
+      "file": "script_2026-06-10.txt"
+    },
+    {
+      "date": "2026-06-09",
+      "file": "script_2026-06-09.txt"
+    },
+    {
+      "date": "2026-06-08",
+      "file": "script_2026-06-08.txt"
+    },
+    {
+      "date": "2026-06-07",
+      "file": "script_2026-06-07.txt"
+    },
+    {
+      "date": "2026-06-06",
+      "file": "script_2026-06-06.txt"
+    },
+    {
+      "date": "2026-06-05",
+      "file": "script_2026-06-05.txt"
+    },
+    {
+      "date": "2026-06-04",
+      "file": "script_2026-06-04.txt"
+    }
+  ],
+  "generated_at": "2026-07-06 12:51 JST",
+  "market": [
+    {
+      "label": "S&P 500",
+      "price": 7483.24,
+      "as_of": "2026-07-02",
+      "stale": true
+    },
+    {
+      "label": "NASDAQ",
+      "price": 25832.67,
+      "as_of": "2026-07-02",
+      "stale": true
+    },
+    {
+      "label": "日経平均",
+      "price": 69144.5,
+      "as_of": "2026-07-06",
+      "stale": false
+    },
+    {
+      "label": "ドル円",
+      "price": 161.81,
+      "as_of": "2026-07-06",
+      "stale": false
+    },
+    {
+      "label": "WTI原油先物",
+      "price": 68.39,
+      "as_of": "2026-07-05",
+      "stale": false
+    },
+    {
+      "label": "金先物",
+      "price": 4176.1,
+      "as_of": "2026-07-05",
+      "stale": false
+    }
+  ],
+  "usdjpy": 161.81,
   "totals": {
     "JPY": {
-      "market_value": 221560.0,
-      "pnl_amount": 3976.0,
+      "market_value": 219752.0,
+      "pnl_amount": 2168.0,
       "count": 2
     },
     "USD": {
@@ -19,6 +90,7 @@
       "count": 2
     }
   },
+  "total_jpy": 673906,
   "positions": [
     {
       "name": "純金上場信託",
@@ -26,19 +98,19 @@
       "thesis": "地政学ヘッジ",
       "currency": "JPY",
       "symbol": "¥",
-      "price": 20280.0,
+      "price": 20285.0,
       "cost": 22819,
       "shares": 8,
       "as_of": "2026-07-06",
       "stale": false,
       "pnl_pct": -11.1,
-      "market_value": 162240.0,
-      "pnl_amount": -20312.0,
+      "market_value": 162280.0,
+      "pnl_amount": -20272.0,
       "stop_loss": 19400,
       "take_profit": null,
       "note": "停戦崩壊リスクのヘッジ。比率25%超でリバランス",
-      "sl_gap_price": 880.0,
-      "sl_gap_pct": 4.3,
+      "sl_gap_price": 885.0,
+      "sl_gap_pct": 4.4,
       "sl_alert": true
     },
     {
@@ -95,19 +167,19 @@
       "thesis": "AI・半導体成長",
       "currency": "JPY",
       "symbol": "¥",
-      "price": 7415.0,
+      "price": 7184.0,
       "cost": 4379,
       "shares": 8,
       "as_of": "2026-07-06",
       "stale": false,
-      "pnl_pct": 69.3,
-      "market_value": 59320.0,
-      "pnl_amount": 24288.0,
+      "pnl_pct": 64.1,
+      "market_value": 57472.0,
+      "pnl_amount": 22440.0,
       "stop_loss": 6130,
       "take_profit": null,
       "note": "S株。2/3利確済みの残り。来期ガイダンス未開示に注意",
-      "sl_gap_price": 1285.0,
-      "sl_gap_pct": 17.3,
+      "sl_gap_price": 1054.0,
+      "sl_gap_pct": 14.7,
       "sl_alert": false
     }
   ],

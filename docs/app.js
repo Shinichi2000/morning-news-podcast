@@ -5,6 +5,7 @@
   var REPO_DEFAULT = "shinichi2000/morning-news-podcast";
   var LS_PAT = "mb_github_pat";
   var LS_REPO = "mb_github_repo";
+  var LS_DRAFT = "mb_portfolio_draft";
   var THESES = [
     "地政学ヘッジ",
     "防衛・再エスカレーション",
@@ -36,21 +37,280 @@
       .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
       .then(function (d) {
         $("date").textContent = d.date_jp || d.date;
-        $("themeBadge").textContent = d.weekday_theme || "";
+        $("themeBadge").textContent = d.weekday_theme ? "#" + d.weekday_theme : "";
         var seg = d.rotating_segment || "";
         if (d.spotlight) seg += "（" + d.spotlight + "）";
         if (d.is_rebalance_day) seg += "／本日はリバランス日";
         $("segment").textContent = seg;
         if (d.audio) $("player").src = d.audio + "?t=" + encodeURIComponent(d.date || "");
         $("updated").textContent = "Last updated: " + (d.generated_at || "");
+        renderNotice(d);
+        renderMarket(d);
+        renderGraph(d);
         renderSummary(d);
         renderHoldings(d);
+        renderScriptBox(d);
+        renderArchive(d);
+        checkPendingChanges(d);
       })
       .catch(function (e) {
         $("holdings").innerHTML =
           '<div class="stock-card"><div class="fund-note">ダッシュボードデータがまだ生成されていません。次回の自動実行後に表示されます。（' +
           esc(e.message) + "）</div></div>";
       });
+  }
+
+  function jstToday() {
+    var jst = new Date(Date.now() + 9 * 3600 * 1000);
+    return jst.toISOString().slice(0, 10);
+  }
+
+  function renderNotice(d) {
+    var msgs = [];
+    if (d.date && d.date !== jstToday()) {
+      msgs.push("表示中のデータは " + d.date + " 生成分です（本日分はまだ生成されていません）");
+    }
+    if (d.audio_generated === false) {
+      msgs.push("この日の音声生成は失敗しました。価格データは最新ですが、プレーヤーは前回配信分です。設定画面の「配信を再生成」で再実行できます");
+    }
+    $("notice").innerHTML = msgs.map(function (m) {
+      return '<div class="notice warn">⚠ ' + esc(m) + "</div>";
+    }).join("");
+  }
+
+  function checkPendingChanges(d) {
+    // portfolio.json の last_updated が配信生成時刻より新しければ「未反映」を知らせる
+    fetch("portfolio.json?t=" + Date.now())
+      .then(function (r) { return r.json(); })
+      .then(function (pf) {
+        if (!pf.last_updated || !d.generated_at) return;
+        var gen = Date.parse(d.generated_at.replace(" JST", ":00+09:00").replace(" ", "T"));
+        var lu = Date.parse(pf.last_updated);
+        if (!isNaN(gen) && !isNaN(lu) && lu > gen) {
+          $("notice").innerHTML +=
+            '<div class="notice info">ポートフォリオ設定は変更済みですが、まだ配信・ダッシュボードに反映されていません。' +
+            "次回の自動実行、または設定画面の「配信を再生成」で反映されます</div>";
+        }
+      })
+      .catch(function () {});
+  }
+
+  /* ===== Obsidianグラフビュー風のポートフォリオマップ ===== */
+
+  var graphState = { nodes: [], edges: [], selected: null, raf: null };
+
+  function renderGraph(d) {
+    var canvas = $("graph");
+    if (!canvas) return;
+    var positions = (d.positions || []).filter(function (p) { return p.price != null; });
+    if (!positions.length) { $("graphCard").style.display = "none"; return; }
+
+    var usd = d.usdjpy || 150;
+    var nodes = [], edges = [];
+    var center = { label: "Portfolio", type: "center", r: 9 };
+    nodes.push(center);
+
+    var hubs = {};
+    function hubFor(thesis) {
+      if (!hubs[thesis]) {
+        hubs[thesis] = { label: thesis, type: "thesis", r: 5.5, children: [] };
+        nodes.push(hubs[thesis]);
+        edges.push([center, hubs[thesis]]);
+      }
+      return hubs[thesis];
+    }
+
+    positions.forEach(function (p) {
+      var hub = hubFor(p.thesis || "その他");
+      var vjpy = p.currency === "USD" ? p.market_value * usd : p.market_value;
+      var n = {
+        label: p.name, type: "holding", r: Math.max(6, Math.min(15, Math.sqrt(vjpy) / 38)),
+        pnl: p.pnl_pct, info: p,
+      };
+      nodes.push(n); hub.children.push(n); edges.push([hub, n]);
+    });
+    (d.funds || []).forEach(function (f) {
+      var hub = hubFor(f.thesis || "その他");
+      var n = { label: f.name, type: "fund", r: 6 };
+      nodes.push(n); hub.children.push(n); edges.push([hub, n]);
+    });
+    (d.excluded || []).forEach(function (x) {
+      var hub = hubFor("監視中");
+      var n = { label: x.name, type: "watch", r: 5 };
+      nodes.push(n); hub.children.push(n); edges.push([hub, n]);
+    });
+
+    // レイアウト：中心→テーゼハブを円周に、保有銘柄はハブの外側に扇状に配置
+    var W = canvas.parentElement.clientWidth, H = 300;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.height = H + "px";
+    var cx = W / 2, cy = H / 2 - 6;
+    center.x = cx; center.y = cy;
+    var hubList = Object.keys(hubs).map(function (k) { return hubs[k]; });
+    var R1 = Math.min(W, H) * 0.24;
+    var margin = 26;
+    hubList.forEach(function (hub, i) {
+      var a = -Math.PI / 2 + (i / hubList.length) * Math.PI * 2;
+      hub.x = cx + Math.cos(a) * R1;
+      hub.y = cy + Math.sin(a) * R1 * 0.85;
+      hub.angle = a;
+      var m = hub.children.length;
+      hub.children.forEach(function (ch, j) {
+        var spread = Math.min(1.2, 0.6 * m);
+        var ca = hub.angle + (m === 1 ? 0 : (j / (m - 1) - 0.5) * spread);
+        var R2 = 56 + (j % 2) * 12;
+        ch.x = hub.x + Math.cos(ca) * R2;
+        ch.y = hub.y + Math.sin(ca) * R2 * 0.8;
+        // ノードとラベルが画面内に収まるようにクランプ
+        ch.x = Math.max(margin, Math.min(W - margin, ch.x));
+        ch.y = Math.max(margin, Math.min(H - margin - 8, ch.y));
+      });
+    });
+    nodes.forEach(function (n, i) { n.phase = i * 2.4; });
+
+    graphState = { nodes: nodes, edges: edges, selected: null, raf: graphState.raf, W: W, H: H, dpr: dpr, canvas: canvas };
+
+    canvas.onclick = function (ev) {
+      var rect = canvas.getBoundingClientRect();
+      var mx = ev.clientX - rect.left, my = ev.clientY - rect.top;
+      var hit = null;
+      nodes.forEach(function (n) {
+        var dx = mx - (n.x + (n.ox || 0)), dy = my - (n.y + (n.oy || 0));
+        if (Math.sqrt(dx * dx + dy * dy) < n.r + 9) hit = n;
+      });
+      graphState.selected = hit;
+      updateGraphInfo(hit, d);
+    };
+
+    if (graphState.raf) cancelAnimationFrame(graphState.raf);
+    var start = performance.now();
+    (function tick(now) {
+      var t = (now - start) / 1000;
+      nodes.forEach(function (n) {
+        n.ox = Math.sin(t * 0.5 + n.phase) * 2.2;
+        n.oy = Math.cos(t * 0.4 + n.phase * 1.3) * 2.2;
+      });
+      drawGraph();
+      graphState.raf = requestAnimationFrame(tick);
+    })(start);
+  }
+
+  function nodeColor(n) {
+    if (n.type === "center") return "#DCDDDE";
+    if (n.type === "thesis") return "#A882FF";
+    if (n.type === "fund" || n.type === "watch") return "#777777";
+    return n.pnl >= 0 ? "#7BD88F" : "#FF7A7A";
+  }
+
+  function drawGraph() {
+    var s = graphState;
+    var ctx = s.canvas.getContext("2d");
+    ctx.setTransform(s.dpr, 0, 0, s.dpr, 0, 0);
+    ctx.clearRect(0, 0, s.W, s.H);
+    var sel = s.selected;
+
+    s.edges.forEach(function (e) {
+      var active = !sel || e[0] === sel || e[1] === sel;
+      ctx.strokeStyle = active ? "rgba(168,130,255,0.28)" : "rgba(255,255,255,0.05)";
+      ctx.lineWidth = active && sel ? 1.4 : 1;
+      ctx.beginPath();
+      ctx.moveTo(e[0].x + (e[0].ox || 0), e[0].y + (e[0].oy || 0));
+      ctx.lineTo(e[1].x + (e[1].ox || 0), e[1].y + (e[1].oy || 0));
+      ctx.stroke();
+    });
+
+    s.nodes.forEach(function (n) {
+      var x = n.x + (n.ox || 0), y = n.y + (n.oy || 0);
+      var connected = !sel || n === sel ||
+        s.edges.some(function (e) { return (e[0] === sel && e[1] === n) || (e[1] === sel && e[0] === n); });
+      ctx.globalAlpha = connected ? 1 : 0.2;
+      var col = nodeColor(n);
+      if (n === sel) {
+        ctx.shadowColor = col; ctx.shadowBlur = 14;
+      }
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(x, y, n.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      var label = n.label.length > 9 ? n.label.slice(0, 8) + "…" : n.label;
+      ctx.fillStyle = connected ? "#AAAAAA" : "rgba(170,170,170,0.25)";
+      ctx.font = "9px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(label, x, y + n.r + 11);
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  function updateGraphInfo(n, d) {
+    var el = $("graphInfo");
+    if (!n) { el.textContent = "ノードをタップすると詳細を表示します"; return; }
+    if (n.type === "holding") {
+      var p = n.info;
+      el.innerHTML =
+        "<strong>" + esc(p.name) + "</strong>　" +
+        '<span class="num">' + sym(p.currency) + fmtNum(p.price, p.currency) + "</span>　" +
+        '<span class="num ' + pnlClass(p.pnl_pct) + '">' + signed(p.pnl_pct) + "%</span>　評価額 " +
+        '<span class="num">' + sym(p.currency) + fmtNum(p.market_value, p.currency) + "</span>";
+    } else if (n.type === "thesis") {
+      el.innerHTML = "<strong>#" + esc(n.label) + "</strong>　関連銘柄 " + n.children.length + "件";
+    } else if (n.type === "fund") {
+      el.innerHTML = "<strong>" + esc(n.label) + "</strong>　投資信託（価格自動取得の対象外）";
+    } else if (n.type === "watch") {
+      el.innerHTML = "<strong>" + esc(n.label) + "</strong>　未購入・監視中";
+    } else {
+      var t = (d.total_jpy != null) ? "総資産 ¥" + d.total_jpy.toLocaleString("ja-JP") + "（円換算）" : "ポートフォリオ全体";
+      el.innerHTML = "<strong>Portfolio</strong>　" + t;
+    }
+  }
+
+  function renderMarket(d) {
+    var m = d.market || [];
+    if (!m.length) { $("market").innerHTML = ""; return; }
+    var html = m.map(function (x) {
+      var val;
+      if (x.label === "ドル円") val = x.price.toFixed(2) + "円";
+      else if (x.label === "WTI原油先物" || x.label === "金先物") val = "$" + fmtNum(x.price, "USD");
+      else if (x.label === "日経平均") val = fmtNum(x.price, "USD") + "円";
+      else val = fmtNum(x.price, "USD");
+      return (
+        '<div class="market-chip"><span class="chip-label">' + esc(x.label) + "</span>" +
+        '<span class="chip-value num">' + val + (x.stale ? " ⚠" : "") + "</span></div>"
+      );
+    }).join("");
+    $("market").innerHTML =
+      '<div class="section-title">Market</div><div class="market-row">' + html + "</div>" +
+      '<div class="as-of" style="margin-top:6px">各指標は直近営業日の終値（⚠＝取得日が3日以上前）</div>';
+  }
+
+  function renderScriptBox(d) {
+    if (!d.script_file) { $("scriptBox").innerHTML = ""; return; }
+    $("scriptBox").innerHTML =
+      '<details class="script-details"><summary>今日の原稿を読む</summary>' +
+      '<div class="script-text" id="scriptText">読み込み中...</div></details>';
+    var loaded = false;
+    $("scriptBox").querySelector("details").addEventListener("toggle", function () {
+      if (loaded || !this.open) return;
+      loaded = true;
+      fetch(d.script_file + "?t=" + Date.now())
+        .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+        .then(function (t) { $("scriptText").textContent = t; })
+        .catch(function (e) { $("scriptText").textContent = "原稿を読み込めませんでした: " + e.message; });
+    });
+  }
+
+  function renderArchive(d) {
+    var scripts = (d.recent_scripts || []).filter(function (s) { return s.date !== d.date; });
+    if (!scripts.length) { $("archive").innerHTML = ""; return; }
+    $("archive").innerHTML =
+      '<details class="script-details"><summary>過去の原稿（' + scripts.length + "日分）</summary>" +
+      '<div class="archive-list">' +
+      scripts.map(function (s) {
+        return '<a class="archive-link" href="' + esc(s.file) + '" target="_blank" rel="noopener">' + esc(s.date) + "</a>";
+      }).join("") +
+      "</div></details>";
   }
 
   function renderSummary(d) {
@@ -67,7 +327,16 @@
         (t.pnl_amount >= 0 ? "+" : "") + fmtNum(t.pnl_amount, cur) + "</div>" +
         "</div>";
     });
-    $("summary").innerHTML = html ? '<div class="summary-row">' + html + "</div>" : "";
+    var wide = "";
+    if (d.total_jpy != null) {
+      wide =
+        '<div class="summary-card wide">' +
+        '<div class="label">総資産（円換算・投信除く）</div>' +
+        '<div class="value num">¥' + d.total_jpy.toLocaleString("ja-JP") + "</div>" +
+        '<div class="sub" style="color:var(--text-dim)">@' + d.usdjpy.toFixed(2) + "円/ドルで換算</div>" +
+        "</div>";
+    }
+    $("summary").innerHTML = (html ? '<div class="summary-row">' + html + "</div>" : "") + wide;
   }
 
   function lineBox(label, cls, valueHtml, gapHtml) {
@@ -209,10 +478,55 @@
       updatePatStatus();
       setStatus("トークンを削除しました", true);
     });
+    $("testPatBtn").addEventListener("click", function () {
+      if (!getPat()) { setStatus("PATが未設定です", false); return; }
+      setStatus("接続テスト中...", true);
+      fetch(apiUrl(), { headers: apiHeaders() })
+        .then(function (r) {
+          if (r.ok) setStatus("接続OK：" + getRepo() + " の portfolio.json を読み取れました", true);
+          else if (r.status === 401) setStatus("接続NG（401）：トークンが無効か期限切れです", false);
+          else if (r.status === 403) setStatus("接続NG（403）：権限不足です。Contents: Read/Write を確認してください", false);
+          else if (r.status === 404) setStatus("接続NG（404）：リポジトリ名の誤りか、PATにこのリポジトリへのアクセス権がありません", false);
+          else setStatus("接続NG（HTTP " + r.status + "）", false);
+        })
+        .catch(function (e) { setStatus("接続NG: " + e.message, false); });
+    });
+    $("regenBtn").addEventListener("click", function () {
+      if (!getPat()) { setStatus("再生成にはPATが必要です（Actions: Read/Write権限）", false); return; }
+      if (!confirm("GitHub Actions を起動して配信を再生成しますか？（数分かかります）")) return;
+      dispatchRegen();
+    });
     $("addBtn").addEventListener("click", function () { openForm(null); });
     $("cancelBtn").addEventListener("click", closeForm);
     $("formSaveBtn").addEventListener("click", submitForm);
     $("commitBtn").addEventListener("click", savePortfolio);
+    $("discardDraftBtn").addEventListener("click", function () {
+      if (!confirm("未コミットの変更を破棄して、保存済みの内容を読み込み直しますか？")) return;
+      clearDraft();
+      loadPortfolioForEdit();
+      setStatus("下書きを破棄しました", true);
+    });
+  }
+
+  function dispatchRegen() {
+    setStatus("Actions を起動中...", true);
+    fetch("https://api.github.com/repos/" + getRepo() + "/actions/workflows/daily.yml/dispatches", {
+      method: "POST",
+      headers: apiHeaders(),
+      body: JSON.stringify({ ref: "main" }),
+    })
+      .then(function (r) {
+        if (r.status === 204) {
+          setStatus("再生成を開始しました。5〜10分後にダッシュボードを再読み込みしてください", true);
+        } else if (r.status === 403) {
+          setStatus("起動できません（403）：PATに Actions: Read/Write 権限を追加してください", false);
+        } else {
+          return r.json().then(function (j) {
+            setStatus("起動できません（HTTP " + r.status + "）: " + (j.message || ""), false);
+          });
+        }
+      })
+      .catch(function (e) { setStatus("起動できません: " + e.message, false); });
   }
 
   function updatePatStatus() {
@@ -221,12 +535,45 @@
       : "方式B：PAT未設定のため、保存時にコミット用JSONを表示します";
   }
 
+  function saveDraft() {
+    try {
+      localStorage.setItem(LS_DRAFT, JSON.stringify({ portfolio: state.portfolio, ts: new Date().toISOString() }));
+    } catch (e) {}
+    updateDraftUi();
+  }
+  function getDraft() {
+    try { return JSON.parse(localStorage.getItem(LS_DRAFT) || "null"); } catch (e) { return null; }
+  }
+  function clearDraft() {
+    localStorage.removeItem(LS_DRAFT);
+    updateDraftUi();
+  }
+  function updateDraftUi() {
+    var draft = getDraft();
+    $("discardDraftBtn").style.display = draft ? "" : "none";
+    $("draftMsg").textContent = draft
+      ? "未コミットの変更があります（このブラウザに下書き保存済み）。「保存（コミット）」で確定してください"
+      : "";
+    $("draftMsg").className = "status-msg " + (draft ? "err" : "");
+  }
+
   function loadPortfolioForEdit() {
     var done = function (pf, sha, source) {
+      // 未コミットの下書きがあれば、編集内容を失わないよう下書きを優先して復元する
+      var draft = getDraft();
+      if (draft && draft.portfolio) {
+        state.portfolio = draft.portfolio;
+        state.sha = sha;
+        state.source = "ローカル下書き（未コミット・" + (draft.ts || "").slice(0, 16).replace("T", " ") + "保存）";
+        renderEditor();
+        updateDraftUi();
+        return;
+      }
       state.portfolio = pf;
       state.sha = sha;
       state.source = source;
       renderEditor();
+      updateDraftUi();
     };
     if (getPat()) {
       fetch(apiUrl(), { headers: apiHeaders() })
@@ -281,6 +628,7 @@
         var i = parseInt(b.dataset.del, 10);
         if (confirm("「" + pf.holdings[i].name + "」を削除しますか？\n（「保存（コミット）」を押すまで確定しません）")) {
           pf.holdings.splice(i, 1);
+          saveDraft();
           renderEditor();
           setStatus("削除しました。「保存（コミット）」で確定してください", true);
         }
@@ -361,6 +709,7 @@
     } else {
       state.portfolio.holdings.push(h);
     }
+    saveDraft();
     closeForm();
     renderEditor();
     setStatus("変更しました。「保存（コミット）」で確定してください", true);
@@ -375,35 +724,37 @@
       // 方式B：コミット用JSONを表示して手動コミット
       $("jsonOut").value = jsonText;
       $("jsonOutWrap").style.display = "block";
-      setStatus("PAT未設定のため方式Bです。以下のJSONを portfolio.json として手動コミットしてください", true);
+      setStatus("PAT未設定のため方式Bです。以下のJSONを portfolio.json として手動コミットしてください（コミット後に「下書きを破棄して読み込み直す」を押すと表示が最新化されます）", true);
       return;
     }
 
     setStatus("GitHubへ保存中...", true);
-    var doPut = function (sha) {
-      var body = {
-        message: "📊 portfolio.json をサイトから更新",
-        content: b64EncodeUtf8(jsonText),
-      };
-      if (sha) body.sha = sha;
-      return fetch(apiUrl(), {
-        method: "PUT",
-        headers: apiHeaders(),
-        body: JSON.stringify(body),
-      });
+    var putFile = function (path, message) {
+      var url = "https://api.github.com/repos/" + getRepo() + "/contents/" + path;
+      // 最新のshaを取得してから更新（競合防止）
+      return fetch(url, { headers: apiHeaders() })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          var body = { message: message, content: b64EncodeUtf8(jsonText) };
+          if (j && j.sha) body.sha = j.sha;
+          return fetch(url, { method: "PUT", headers: apiHeaders(), body: JSON.stringify(body) });
+        })
+        .then(function (r) {
+          if (!r.ok) return r.json().then(function (j) { throw new Error(path + " HTTP " + r.status + ": " + (j.message || "")); });
+          return r.json();
+        });
     };
-    // 最新のshaを取得してから更新（競合防止）
-    fetch(apiUrl(), { headers: apiHeaders() })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { return doPut(j ? j.sha : state.sha); })
-      .then(function (r) {
-        if (!r.ok) return r.json().then(function (j) { throw new Error("HTTP " + r.status + ": " + (j.message || "")); });
-        return r.json();
-      })
-      .then(function (j) {
-        state.sha = j.content ? j.content.sha : null;
+    // ルート（生成処理が読む正本）と docs/（サイトが読むコピー）の両方を更新する
+    putFile("portfolio.json", "portfolio.json をサイトから更新")
+      .then(function () { return putFile("docs/portfolio.json", "docs/portfolio.json を同期"); })
+      .then(function () {
+        clearDraft();
         $("jsonOutWrap").style.display = "none";
-        setStatus("保存しました（コミット完了）。次回の自動実行で原稿・ダッシュボードに反映されます", true);
+        setStatus("保存しました（コミット完了）", true);
+        loadPortfolioForEdit();
+        if (confirm("保存しました。今すぐ配信を再生成して反映しますか？\n（PATに Actions: Read/Write 権限が必要。不要なら次回の自動実行で反映されます）")) {
+          dispatchRegen();
+        }
       })
       .catch(function (e) { setStatus("保存に失敗しました: " + e.message, false); });
   }

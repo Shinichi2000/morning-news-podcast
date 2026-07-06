@@ -244,6 +244,10 @@ SCRIPT_PROMPT = """あなたは経済情報番組の構成作家兼ナレータ�
 【話し方】
 - 自然な話し言葉。番組テーマに応じてトーンを変える（火曜は緊張感、日曜は落ち着いた語り）
 - 数値は正負を明示。銘柄は日本語名
+- 音声合成で読み上げるため、読み間違いされにくい表記にする：
+  - アルファベット略語はカタカナで書く（例：「FOMC」→「エフオーエムシー」、「CPI」→「シーピーアイ」、「NASDAQ」→「ナスダック」）
+  - 記号は使わず言葉で書く（「%」→「パーセント」、「+5%」→「プラス5パーセント」、「1ドル=160円」→「1ドル160円」）
+  - 誤読されやすい漢字はひらがなで書く（「逆指値」→「ぎゃくさしね」、「金先物」→「きん先物」）
 - パート間の切り替えは自然なつなぎ言葉を使い、見出しや番号は読まない
 - 原稿のみ出力する（メタ情報・注釈・マークダウン記法は不要）
 
@@ -567,9 +571,83 @@ def generate_script(news_items, market_data, positions, portfolio):
 
     return None
 
+# ===== TTS読み上げ正規化（読み間違い対策）=====
+# 読み間違いに気づいたら、このリストに（誤読される表記, 正しい読み）を追記するだけで直せる。
+# 上から順に置換されるため、長い表記を先に書くこと。
+TTS_READING_FIXES = [
+    ("S&P500", "エスアンドピー500"),
+    ("S&P 500", "エスアンドピー500"),
+    ("S&P", "エスアンドピー"),
+    ("NASDAQ", "ナスダック"),
+    ("Nasdaq", "ナスダック"),
+    ("NYSE", "ニューヨーク証券取引所"),
+    ("NYダウ", "ニューヨークダウ"),
+    ("OPEC", "オペック"),
+    ("NATO", "ナトー"),
+    ("NVDA", "エヌビディア"),
+    ("LMT", "ロッキード・マーチン"),
+    ("REIT", "リート"),
+    ("FRB", "エフアールビー"),
+    # 金融用語の誤読対策（漢字をかなに開く）
+    ("金先物", "きん先物"),
+    ("金価格", "きん価格"),
+    ("金相場", "きん相場"),
+    ("逆指値", "ぎゃくさしね"),
+    ("指値", "さしね"),
+    ("約定", "やくじょう"),
+    ("寄り付き", "よりつき"),
+    ("大引け", "おおびけ"),
+    ("前引け", "ぜんびけ"),
+    ("値幅", "ねはば"),
+    ("上値", "うわね"),
+    ("下値", "したね"),
+]
+
+# 英大文字略語を一文字ずつカタカナに読み下すための表
+ALPHA_KATAKANA = {
+    "A": "エー", "B": "ビー", "C": "シー", "D": "ディー", "E": "イー",
+    "F": "エフ", "G": "ジー", "H": "エイチ", "I": "アイ", "J": "ジェー",
+    "K": "ケー", "L": "エル", "M": "エム", "N": "エヌ", "O": "オー",
+    "P": "ピー", "Q": "キュー", "R": "アール", "S": "エス", "T": "ティー",
+    "U": "ユー", "V": "ブイ", "W": "ダブリュー", "X": "エックス",
+    "Y": "ワイ", "Z": "ゼット",
+}
+
+
+def normalize_for_tts(text):
+    """音声合成前に、誤読されやすい表記を読み上げ用に正規化する。
+    保存される原稿（script_*.txt）は元の表記のまま、音声だけに適用する。"""
+    t = text
+    # 装飾記号・マークダウン残骸の除去
+    t = re.sub(r"[■◆●▼★☆*#`_]+", "", t)
+    # 個別の読み修正
+    for wrong, right in TTS_READING_FIXES:
+        t = t.replace(wrong, right)
+    # 記号の読み下し
+    t = t.replace("％", "パーセント").replace("%", "パーセント")
+    t = t.replace("±", "プラスマイナス")
+    t = t.replace("&", "アンド")
+    t = t.replace("＝", "、").replace("=", "、")
+    t = re.sub(r"[〜~](?=[0-9])", "から", t)
+    # 通貨記号は数値の後ろに読み替える（¥19,400 → 19,400円 / $68.39 → 68.39ドル）
+    t = re.sub(r"[¥￥]([0-9][0-9,\.]*)", r"\1円", t)
+    t = re.sub(r"\$([0-9][0-9,\.]*)", r"\1ドル", t)
+    # 数値の正負記号（日付の「2026-06-10」等は前が数字なので対象外）
+    t = re.sub(r"(?<![0-9])[+＋](?=[0-9])", "プラス", t)
+    t = re.sub(r"(?<![0-9\-])[\-−▲](?=[0-9])", "マイナス", t)
+    # Q1〜Q4 → 第N四半期
+    t = re.sub(r"(?<![A-Za-z0-9])Q([1-4])(?![0-9])", r"第\1四半期", t)
+    # 残った英大文字略語（2〜5文字）は一文字ずつカタカナで読む（例: FOMC→エフオーエムシー）
+    def _acro(m):
+        return "".join(ALPHA_KATAKANA[c] for c in m.group(0))
+    t = re.sub(r"(?<![A-Za-z0-9])[A-Z]{2,5}(?![A-Za-z0-9])", _acro, t)
+    return t
+
+
 async def generate_audio(script, output_path):
     try:
-        communicate = edge_tts.Communicate(script, VOICE)
+        tts_text = normalize_for_tts(script)
+        communicate = edge_tts.Communicate(tts_text, VOICE)
         await communicate.save(output_path)
         print(f"  OK: 音声生成完了 → {output_path}")
         return True
@@ -579,7 +657,18 @@ async def generate_audio(script, output_path):
 
 # ===== サイト用データ・HTML生成（課題3）=====
 
-def build_dashboard_data(positions, portfolio, mp3_filename):
+def list_recent_scripts(limit=7):
+    """サイトのアーカイブ表示用に、残っている原稿ファイルを新しい順で返す"""
+    files = sorted(glob.glob(os.path.join(OUTPUT_DIR, "script_*.txt")), reverse=True)[:limit]
+    out = []
+    for f in files:
+        m = re.search(r"script_(\d{4}-\d{2}-\d{2})\.txt$", f)
+        if m:
+            out.append({"date": m.group(1), "file": os.path.basename(f)})
+    return out
+
+
+def build_dashboard_data(positions, market_data, portfolio, mp3_filename, audio_ok):
     """app.js が fetch して描画する dashboard.json を構築"""
     today_date = NOW_JST.date()
     theme = get_weekday_theme(today_date)
@@ -598,6 +687,22 @@ def build_dashboard_data(positions, portfolio, mp3_filename):
         t["pnl_amount"] = round(t["pnl_amount"] + p["pnl_amount"], 2)
         t["count"] += 1
 
+    # ドル円レートがあれば円換算の総資産も算出（検証可能なようにレートも出力）
+    usdjpy = None
+    if "ドル円" in market_data and market_data["ドル円"]["price"]:
+        usdjpy = market_data["ドル円"]["price"]
+    total_jpy = None
+    if usdjpy is not None:
+        total_jpy = round(
+            totals.get("JPY", {}).get("market_value", 0)
+            + totals.get("USD", {}).get("market_value", 0) * usdjpy
+        )
+
+    market_list = [
+        {"label": label, "price": info["price"], "as_of": info["as_of"], "stale": info["stale"]}
+        for label, info in market_data.items()
+    ]
+
     excluded = [
         {"name": h["name"], "ticker": h.get("ticker"), "note": h.get("note", "")}
         for h in portfolio["holdings"]
@@ -608,6 +713,9 @@ def build_dashboard_data(positions, portfolio, mp3_filename):
         for h in fund_holdings(portfolio)
     ]
 
+    scripts = list_recent_scripts()
+    script_file = next((s["file"] for s in scripts if s["date"] == TODAY), None)
+
     return {
         "date": TODAY,
         "date_jp": TODAY_JP,
@@ -616,16 +724,23 @@ def build_dashboard_data(positions, portfolio, mp3_filename):
         "spotlight": spotlight,
         "is_rebalance_day": is_first_saturday(today_date),
         "audio": mp3_filename,
+        "audio_generated": audio_ok,
+        "script_file": script_file,
+        "recent_scripts": scripts,
         "generated_at": NOW_JST.strftime("%Y-%m-%d %H:%M JST"),
+        "market": market_list,
+        "usdjpy": usdjpy,
         "totals": totals,
+        "total_jpy": total_jpy,
         "positions": positions,
         "funds": funds,
         "excluded": excluded,
     }
 
-def update_site_data(positions, portfolio, mp3_filename):
+
+def update_site_data(positions, market_data, portfolio, mp3_filename, audio_ok=True):
     """dashboard.json の生成と portfolio.json の docs/ への同期"""
-    dashboard = build_dashboard_data(positions, portfolio, mp3_filename)
+    dashboard = build_dashboard_data(positions, market_data, portfolio, mp3_filename, audio_ok)
     dash_path = os.path.join(OUTPUT_DIR, "dashboard.json")
     with open(dash_path, "w", encoding="utf-8") as f:
         json.dump(dashboard, f, ensure_ascii=False, indent=2)
@@ -681,6 +796,8 @@ def main():
     script = generate_script(news_items, market_data, positions, portfolio)
     if not script:
         print("\nFAIL: 原稿生成に失敗しました")
+        # 音声は作れなくても、価格ダッシュボードだけは最新化してサイトに反映する
+        update_site_data(positions, market_data, portfolio, "podcast.mp3", audio_ok=False)
         exit(1)
 
     script_path = os.path.join(OUTPUT_DIR, "script_" + TODAY + ".txt")
@@ -691,10 +808,11 @@ def main():
     print("\n[5] 音声生成中...")
     success = asyncio.run(generate_audio(script, OUTPUT_MP3))
     if not success:
+        update_site_data(positions, market_data, portfolio, "podcast.mp3", audio_ok=False)
         exit(1)
 
     print("\n[6] サイトデータ更新中...")
-    update_site_data(positions, portfolio, "podcast.mp3")
+    update_site_data(positions, market_data, portfolio, "podcast.mp3", audio_ok=True)
     print("\nDONE!")
 
 if __name__ == "__main__":
