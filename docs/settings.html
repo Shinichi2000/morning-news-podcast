@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1E1E1E">
 <title>Portfolio設定 - Morning Brief</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -46,7 +47,7 @@
       生成に失敗した日や、ポートフォリオ変更を今すぐ反映したいときに、GitHub Actions を手動起動します。
       PATに <strong>Actions: Read/Write</strong> 権限が必要です（Contents権限とは別）。
     </div>
-    <button class="btn primary" id="regenBtn" style="margin-top:0">🎙 配信を再生成（Actions実行）</button>
+    <button class="btn primary" id="regenBtn" style="margin-top:0">配信を再生成（Actions実行）</button>
   </div>
 
   <div class="status-msg" id="statusMsg"></div>
@@ -123,7 +124,9 @@
     </div>
   </div>
 
+  <div class="status-msg" id="draftMsg"></div>
   <button class="btn primary" id="commitBtn" style="margin-top:18px">保存（コミット）</button>
+  <button class="btn danger" id="discardDraftBtn" style="display:none">下書きを破棄して読み込み直す</button>
 
   <div id="jsonOutWrap" style="display:none; margin-top:14px;">
     <div class="section-title">方式B：コミット用JSON</div>
