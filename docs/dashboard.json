@@ -1,14 +1,18 @@
 {
-  "date": "2026-07-12",
-  "date_jp": "2026年07月12日日曜日",
-  "weekday_theme": "ロング・ビュー",
-  "rotating_segment": "今日の数字",
-  "spotlight": null,
+  "date": "2026-07-13",
+  "date_jp": "2026年07月13日月曜日",
+  "weekday_theme": "ウィークリー・プレビュー",
+  "rotating_segment": "保有銘柄スポットライト",
+  "spotlight": "エヌビディア",
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
   "audio_generated": true,
-  "script_file": "script_2026-07-12.txt",
+  "script_file": "script_2026-07-13.txt",
   "recent_scripts": [
+    {
+      "date": "2026-07-13",
+      "file": "script_2026-07-13.txt"
+    },
     {
       "date": "2026-07-12",
       "file": "script_2026-07-12.txt"
@@ -32,13 +36,9 @@
     {
       "date": "2026-07-07",
       "file": "script_2026-07-07.txt"
-    },
-    {
-      "date": "2026-07-06",
-      "file": "script_2026-07-06.txt"
     }
   ],
-  "generated_at": "2026-07-12 06:53 JST",
+  "generated_at": "2026-07-13 06:55 JST",
   "market": [
     {
       "label": "S&P 500",
@@ -60,8 +60,8 @@
     },
     {
       "label": "ドル円",
-      "price": 161.67,
-      "as_of": "2026-07-10",
+      "price": 161.75,
+      "as_of": "2026-07-12",
       "stale": false
     },
     {
@@ -72,12 +72,12 @@
     },
     {
       "label": "金先物",
-      "price": 4104.1,
+      "price": 4113.7,
       "as_of": "2026-07-10",
       "stale": false
     }
   ],
-  "usdjpy": 161.67,
+  "usdjpy": 161.75,
   "totals": {
     "JPY": {
       "market_value": 218360.0,
@@ -90,7 +90,7 @@
       "count": 2
     }
   },
-  "total_jpy": 676762,
+  "total_jpy": 676989,
   "positions": [
     {
       "name": "純金上場信託",
