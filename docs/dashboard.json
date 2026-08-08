@@ -1,14 +1,18 @@
 {
-  "date": "2026-08-08",
-  "date_jp": "2026年08月08日土曜日",
-  "weekday_theme": "リバランス・レビュー",
-  "rotating_segment": "コントラリアン",
+  "date": "2026-08-09",
+  "date_jp": "2026年08月09日日曜日",
+  "weekday_theme": "ロング・ビュー",
+  "rotating_segment": "今日の数字",
   "spotlight": null,
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
   "audio_generated": true,
-  "script_file": "script_2026-08-08.txt",
+  "script_file": "script_2026-08-09.txt",
   "recent_scripts": [
+    {
+      "date": "2026-08-09",
+      "file": "script_2026-08-09.txt"
+    },
     {
       "date": "2026-08-08",
       "file": "script_2026-08-08.txt"
@@ -32,13 +36,9 @@
     {
       "date": "2026-08-03",
       "file": "script_2026-08-03.txt"
-    },
-    {
-      "date": "2026-08-02",
-      "file": "script_2026-08-02.txt"
     }
   ],
-  "generated_at": "2026-08-08 06:41 JST",
+  "generated_at": "2026-08-09 06:33 JST",
   "market": [
     {
       "label": "S&P 500",
@@ -54,8 +54,8 @@
     },
     {
       "label": "日経平均",
-      "price": 65683.26,
-      "as_of": "2026-08-06",
+      "price": 65606.71,
+      "as_of": "2026-08-07",
       "stale": false
     },
     {
@@ -66,13 +66,13 @@
     },
     {
       "label": "WTI原油先物",
-      "price": 77.08,
+      "price": 78.18,
       "as_of": "2026-08-07",
       "stale": false
     },
     {
       "label": "金先物",
-      "price": 4401.3,
+      "price": 4340.7,
       "as_of": "2026-08-07",
       "stale": false
     }
