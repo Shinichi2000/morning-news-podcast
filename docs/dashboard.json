@@ -1,14 +1,18 @@
 {
-  "date": "2026-08-22",
-  "date_jp": "2026年08月22日土曜日",
-  "weekday_theme": "リバランス・レビュー",
-  "rotating_segment": "コントラリアン",
+  "date": "2026-08-23",
+  "date_jp": "2026年08月23日日曜日",
+  "weekday_theme": "ロング・ビュー",
+  "rotating_segment": "今日の数字",
   "spotlight": null,
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
   "audio_generated": true,
-  "script_file": "script_2026-08-22.txt",
+  "script_file": "script_2026-08-23.txt",
   "recent_scripts": [
+    {
+      "date": "2026-08-23",
+      "file": "script_2026-08-23.txt"
+    },
     {
       "date": "2026-08-22",
       "file": "script_2026-08-22.txt"
@@ -32,13 +36,9 @@
     {
       "date": "2026-08-17",
       "file": "script_2026-08-17.txt"
-    },
-    {
-      "date": "2026-08-16",
-      "file": "script_2026-08-16.txt"
     }
   ],
-  "generated_at": "2026-08-22 06:27 JST",
+  "generated_at": "2026-08-23 06:24 JST",
   "market": [
     {
       "label": "S&P 500",
@@ -54,34 +54,34 @@
     },
     {
       "label": "日経平均",
-      "price": 66216.79,
-      "as_of": "2026-08-20",
+      "price": 66016.36,
+      "as_of": "2026-08-21",
       "stale": false
     },
     {
       "label": "ドル円",
-      "price": 158.86,
+      "price": 158.94,
       "as_of": "2026-08-21",
       "stale": false
     },
     {
       "label": "WTI原油先物",
-      "price": 86.64,
+      "price": 87.06,
       "as_of": "2026-08-21",
       "stale": false
     },
     {
       "label": "金先物",
-      "price": 4661.6,
+      "price": 4624.1,
       "as_of": "2026-08-21",
       "stale": false
     }
   ],
-  "usdjpy": 158.86,
+  "usdjpy": 158.94,
   "totals": {
     "JPY": {
-      "market_value": 220088.0,
-      "pnl_amount": 2504.0,
+      "market_value": 222928.0,
+      "pnl_amount": 5344.0,
       "count": 2
     },
     "USD": {
@@ -90,7 +90,7 @@
       "count": 2
     }
   },
-  "total_jpy": 693337,
+  "total_jpy": 696415,
   "positions": [
     {
       "name": "純金上場信託",
@@ -98,19 +98,19 @@
       "thesis": "地政学ヘッジ",
       "currency": "JPY",
       "symbol": "¥",
-      "price": 21460.0,
+      "price": 21815.0,
       "cost": 22819,
       "shares": 8,
-      "as_of": "2026-08-20",
+      "as_of": "2026-08-21",
       "stale": false,
-      "pnl_pct": -6.0,
-      "market_value": 171680.0,
-      "pnl_amount": -10872.0,
+      "pnl_pct": -4.4,
+      "market_value": 174520.0,
+      "pnl_amount": -8032.0,
       "stop_loss": 19400,
       "take_profit": null,
       "note": "停戦崩壊リスクのヘッジ。比率25%超でリバランス",
-      "sl_gap_price": 2060.0,
-      "sl_gap_pct": 9.6,
+      "sl_gap_price": 2415.0,
+      "sl_gap_pct": 11.1,
       "sl_alert": false
     },
     {
