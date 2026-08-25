@@ -1,14 +1,18 @@
 {
-  "date": "2026-08-25",
-  "date_jp": "2026年08月25日火曜日",
-  "weekday_theme": "グローバル・フォーカス",
-  "rotating_segment": "投資用語の基礎",
+  "date": "2026-08-26",
+  "date_jp": "2026年08月26日水曜日",
+  "weekday_theme": "マーケット・メカニクス",
+  "rotating_segment": "ヒストリー",
   "spotlight": null,
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
   "audio_generated": true,
-  "script_file": "script_2026-08-25.txt",
+  "script_file": "script_2026-08-26.txt",
   "recent_scripts": [
+    {
+      "date": "2026-08-26",
+      "file": "script_2026-08-26.txt"
+    },
     {
       "date": "2026-08-25",
       "file": "script_2026-08-25.txt"
@@ -32,52 +36,48 @@
     {
       "date": "2026-08-20",
       "file": "script_2026-08-20.txt"
-    },
-    {
-      "date": "2026-08-19",
-      "file": "script_2026-08-19.txt"
     }
   ],
-  "generated_at": "2026-08-25 06:32 JST",
+  "generated_at": "2026-08-26 06:31 JST",
   "market": [
     {
       "label": "S&P 500",
-      "price": 7652.86,
-      "as_of": "2026-08-24",
+      "price": 7677.28,
+      "as_of": "2026-08-25",
       "stale": false
     },
     {
       "label": "NASDAQ",
-      "price": 25980.19,
-      "as_of": "2026-08-24",
+      "price": 26151.3,
+      "as_of": "2026-08-25",
       "stale": false
     },
     {
       "label": "日経平均",
-      "price": 66016.36,
-      "as_of": "2026-08-21",
+      "price": 65528.09,
+      "as_of": "2026-08-24",
       "stale": false
     },
     {
       "label": "ドル円",
-      "price": 159.05,
-      "as_of": "2026-08-24",
+      "price": 159.19,
+      "as_of": "2026-08-25",
       "stale": false
     },
     {
       "label": "WTI原油先物",
-      "price": 84.98,
-      "as_of": "2026-08-24",
+      "price": 81.11,
+      "as_of": "2026-08-25",
       "stale": false
     },
     {
       "label": "金先物",
-      "price": 4710.0,
-      "as_of": "2026-08-24",
+      "price": 4715.9,
+      "as_of": "2026-08-25",
       "stale": false
     }
   ],
-  "usdjpy": 159.05,
+  "usdjpy": 159.19,
   "totals": {
     "JPY": {
       "market_value": 226608.0,
@@ -85,12 +85,12 @@
       "count": 2
     },
     "USD": {
-      "market_value": 2943.3,
-      "pnl_amount": 498.9,
+      "market_value": 2947.86,
+      "pnl_amount": 503.46,
       "count": 2
     }
   },
-  "total_jpy": 694740,
+  "total_jpy": 695878,
   "positions": [
     {
       "name": "純金上場信託",
@@ -119,22 +119,22 @@
       "thesis": "防衛・再エスカレーション",
       "currency": "USD",
       "symbol": "$",
-      "price": 564.14,
+      "price": 556.52,
       "cost": 452.9,
       "shares": 3,
-      "as_of": "2026-08-24",
+      "as_of": "2026-08-25",
       "stale": false,
-      "pnl_pct": 24.6,
-      "market_value": 1692.42,
-      "pnl_amount": 333.72,
+      "pnl_pct": 22.9,
+      "market_value": 1669.56,
+      "pnl_amount": 310.86,
       "stop_loss": 480,
       "take_profit": 720,
       "note": "Q2決算まで保有。再エスカレーション局面の中核",
-      "sl_gap_price": 84.14,
-      "sl_gap_pct": 14.9,
+      "sl_gap_price": 76.52,
+      "sl_gap_pct": 13.7,
       "sl_alert": false,
-      "tp_gap_price": 155.86,
-      "tp_gap_pct": 27.6,
+      "tp_gap_price": 163.48,
+      "tp_gap_pct": 29.4,
       "tp_alert": false
     },
     {
@@ -143,22 +143,22 @@
       "thesis": "AI・半導体成長",
       "currency": "USD",
       "symbol": "$",
-      "price": 208.48,
+      "price": 213.05,
       "cost": 180.95,
       "shares": 6,
-      "as_of": "2026-08-24",
+      "as_of": "2026-08-25",
       "stale": false,
-      "pnl_pct": 15.2,
-      "market_value": 1250.88,
-      "pnl_amount": 165.18,
+      "pnl_pct": 17.7,
+      "market_value": 1278.3,
+      "pnl_amount": 192.6,
       "stop_loss": 185,
       "take_profit": 250,
       "note": "AI需要の構造的成長",
-      "sl_gap_price": 23.48,
-      "sl_gap_pct": 11.3,
+      "sl_gap_price": 28.05,
+      "sl_gap_pct": 13.2,
       "sl_alert": false,
-      "tp_gap_price": 41.52,
-      "tp_gap_pct": 19.9,
+      "tp_gap_price": 36.95,
+      "tp_gap_pct": 17.3,
       "tp_alert": false
     },
     {
@@ -170,7 +170,7 @@
       "price": 6051.0,
       "cost": 4379,
       "shares": 8,
-      "as_of": "2026-08-21",
+      "as_of": "2026-08-24",
       "stale": false,
       "pnl_pct": 38.2,
       "market_value": 48408.0,
