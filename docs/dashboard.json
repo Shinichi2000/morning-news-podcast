@@ -1,14 +1,18 @@
 {
-  "date": "2026-08-30",
-  "date_jp": "2026年08月30日日曜日",
-  "weekday_theme": "ロング・ビュー",
-  "rotating_segment": "今日の数字",
-  "spotlight": null,
+  "date": "2026-08-31",
+  "date_jp": "2026年08月31日月曜日",
+  "weekday_theme": "ウィークリー・プレビュー",
+  "rotating_segment": "保有銘柄スポットライト",
+  "spotlight": "信越化学工業",
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
   "audio_generated": true,
-  "script_file": "script_2026-08-30.txt",
+  "script_file": "script_2026-08-31.txt",
   "recent_scripts": [
+    {
+      "date": "2026-08-31",
+      "file": "script_2026-08-31.txt"
+    },
     {
       "date": "2026-08-30",
       "file": "script_2026-08-30.txt"
@@ -32,13 +36,9 @@
     {
       "date": "2026-08-25",
       "file": "script_2026-08-25.txt"
-    },
-    {
-      "date": "2026-08-24",
-      "file": "script_2026-08-24.txt"
     }
   ],
-  "generated_at": "2026-08-30 08:05 JST",
+  "generated_at": "2026-08-31 08:17 JST",
   "market": [
     {
       "label": "S&P 500",
@@ -60,24 +60,24 @@
     },
     {
       "label": "ドル円",
-      "price": 160.04,
-      "as_of": "2026-08-28",
+      "price": 160.18,
+      "as_of": "2026-08-31",
       "stale": false
     },
     {
       "label": "WTI原油先物",
-      "price": 83.4,
-      "as_of": "2026-08-28",
+      "price": 84.81,
+      "as_of": "2026-08-30",
       "stale": false
     },
     {
       "label": "金先物",
-      "price": 4478.1,
-      "as_of": "2026-08-28",
+      "price": 4513.8,
+      "as_of": "2026-08-30",
       "stale": false
     }
   ],
-  "usdjpy": 160.04,
+  "usdjpy": 160.18,
   "totals": {
     "JPY": {
       "market_value": 223328.0,
@@ -90,7 +90,7 @@
       "count": 2
     }
   },
-  "total_jpy": 702944,
+  "total_jpy": 703363,
   "positions": [
     {
       "name": "純金上場信託",
