@@ -1,14 +1,18 @@
 {
-  "date": "2026-10-04",
-  "date_jp": "2026年10月04日日曜日",
-  "weekday_theme": "ロング・ビュー",
-  "rotating_segment": "今日の数字",
-  "spotlight": null,
+  "date": "2026-10-05",
+  "date_jp": "2026年10月05日月曜日",
+  "weekday_theme": "ウィークリー・プレビュー",
+  "rotating_segment": "保有銘柄スポットライト",
+  "spotlight": "エヌビディア",
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
   "audio_generated": true,
-  "script_file": "script_2026-10-04.txt",
+  "script_file": "script_2026-10-05.txt",
   "recent_scripts": [
+    {
+      "date": "2026-10-05",
+      "file": "script_2026-10-05.txt"
+    },
     {
       "date": "2026-10-04",
       "file": "script_2026-10-04.txt"
@@ -32,13 +36,9 @@
     {
       "date": "2026-09-29",
       "file": "script_2026-09-29.txt"
-    },
-    {
-      "date": "2026-09-28",
-      "file": "script_2026-09-28.txt"
     }
   ],
-  "generated_at": "2026-10-04 08:36 JST",
+  "generated_at": "2026-10-05 08:52 JST",
   "market": [
     {
       "label": "S&P 500",
@@ -60,24 +60,24 @@
     },
     {
       "label": "ドル円",
-      "price": 157.83,
-      "as_of": "2026-10-03",
+      "price": 157.74,
+      "as_of": "2026-10-05",
       "stale": false
     },
     {
       "label": "WTI原油先物",
-      "price": 91.11,
-      "as_of": "2026-10-02",
+      "price": 90.98,
+      "as_of": "2026-10-04",
       "stale": false
     },
     {
       "label": "金先物",
-      "price": 4162.3,
-      "as_of": "2026-10-02",
+      "price": 4173.6,
+      "as_of": "2026-10-04",
       "stale": false
     }
   ],
-  "usdjpy": 157.83,
+  "usdjpy": 157.74,
   "totals": {
     "JPY": {
       "market_value": 206800.0,
@@ -90,7 +90,7 @@
       "count": 2
     }
   },
-  "total_jpy": 667653,
+  "total_jpy": 667390,
   "positions": [
     {
       "name": "純金上場信託",
