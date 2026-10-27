@@ -1,14 +1,18 @@
 {
-  "date": "2026-10-26",
-  "date_jp": "2026年10月26日月曜日",
-  "weekday_theme": "ウィークリー・プレビュー",
-  "rotating_segment": "保有銘柄スポットライト",
-  "spotlight": "信越化学工業",
+  "date": "2026-10-27",
+  "date_jp": "2026年10月27日火曜日",
+  "weekday_theme": "グローバル・フォーカス",
+  "rotating_segment": "投資用語の基礎",
+  "spotlight": null,
   "is_rebalance_day": false,
   "audio": "podcast.mp3",
   "audio_generated": true,
-  "script_file": "script_2026-10-26.txt",
+  "script_file": "script_2026-10-27.txt",
   "recent_scripts": [
+    {
+      "date": "2026-10-27",
+      "file": "script_2026-10-27.txt"
+    },
     {
       "date": "2026-10-26",
       "file": "script_2026-10-26.txt"
@@ -32,56 +36,52 @@
     {
       "date": "2026-10-21",
       "file": "script_2026-10-21.txt"
-    },
-    {
-      "date": "2026-10-20",
-      "file": "script_2026-10-20.txt"
     }
   ],
-  "generated_at": "2026-10-26 08:04 JST",
+  "generated_at": "2026-10-27 09:16 JST",
   "market": [
     {
       "label": "S&P 500",
-      "price": 7623.68,
-      "as_of": "2026-10-23",
+      "price": 7676.77,
+      "as_of": "2026-10-26",
       "stale": false
     },
     {
       "label": "NASDAQ",
-      "price": 25955.34,
-      "as_of": "2026-10-23",
+      "price": 26169.38,
+      "as_of": "2026-10-26",
       "stale": false
     },
     {
       "label": "日経平均",
-      "price": 62693.16,
-      "as_of": "2026-10-23",
+      "price": 62452.87,
+      "as_of": "2026-10-27",
       "stale": false
     },
     {
       "label": "ドル円",
-      "price": 156.98,
-      "as_of": "2026-10-25",
+      "price": 157.47,
+      "as_of": "2026-10-27",
       "stale": false
     },
     {
       "label": "WTI原油先物",
-      "price": 102.08,
-      "as_of": "2026-10-25",
+      "price": 101.28,
+      "as_of": "2026-10-26",
       "stale": false
     },
     {
       "label": "金先物",
-      "price": 4015.3,
-      "as_of": "2026-10-25",
+      "price": 4021.4,
+      "as_of": "2026-10-26",
       "stale": false
     }
   ],
-  "usdjpy": 156.98,
+  "usdjpy": 157.47,
   "totals": {
     "JPY": {
-      "market_value": 197368.0,
-      "pnl_amount": -20216.0,
+      "market_value": 196544.0,
+      "pnl_amount": -21040.0,
       "count": 2
     },
     "USD": {
@@ -90,7 +90,7 @@
       "count": 2
     }
   },
-  "total_jpy": 680600,
+  "total_jpy": 681284,
   "positions": [
     {
       "name": "純金上場信託",
@@ -98,19 +98,19 @@
       "thesis": "地政学ヘッジ",
       "currency": "JPY",
       "symbol": "¥",
-      "price": 18845.0,
+      "price": 18785.0,
       "cost": 22819,
       "shares": 8,
-      "as_of": "2026-10-23",
+      "as_of": "2026-10-27",
       "stale": false,
-      "pnl_pct": -17.4,
-      "market_value": 150760.0,
-      "pnl_amount": -31792.0,
+      "pnl_pct": -17.7,
+      "market_value": 150280.0,
+      "pnl_amount": -32272.0,
       "stop_loss": 19400,
       "take_profit": null,
       "note": "停戦崩壊リスクのヘッジ。比率25%超でリバランス",
-      "sl_gap_price": -555.0,
-      "sl_gap_pct": -2.9,
+      "sl_gap_price": -615.0,
+      "sl_gap_pct": -3.3,
       "sl_alert": true
     },
     {
@@ -123,7 +123,7 @@
       "cost": 452.9,
       "shares": 3,
       "as_of": "2026-10-23",
-      "stale": false,
+      "stale": true,
       "pnl_pct": 33.4,
       "market_value": 1812.54,
       "pnl_amount": 453.84,
@@ -147,7 +147,7 @@
       "cost": 180.95,
       "shares": 6,
       "as_of": "2026-10-23",
-      "stale": false,
+      "stale": true,
       "pnl_pct": 16.6,
       "market_value": 1265.76,
       "pnl_amount": 180.06,
@@ -167,19 +167,19 @@
       "thesis": "AI・半導体成長",
       "currency": "JPY",
       "symbol": "¥",
-      "price": 5826.0,
+      "price": 5783.0,
       "cost": 4379,
       "shares": 8,
-      "as_of": "2026-10-23",
+      "as_of": "2026-10-27",
       "stale": false,
-      "pnl_pct": 33.0,
-      "market_value": 46608.0,
-      "pnl_amount": 11576.0,
+      "pnl_pct": 32.1,
+      "market_value": 46264.0,
+      "pnl_amount": 11232.0,
       "stop_loss": 6130,
       "take_profit": null,
       "note": "S株。2/3利確済みの残り。来期ガイダンス未開示に注意",
-      "sl_gap_price": -304.0,
-      "sl_gap_pct": -5.2,
+      "sl_gap_price": -347.0,
+      "sl_gap_pct": -6.0,
       "sl_alert": true
     }
   ],
